@@ -132,12 +132,16 @@ Alpine.start();
                 Array.prototype.forEach.call(el.children, tandai);
                 return;
             }
+            // Jangan beri .reveal pada kolom yang membungkus elemen sticky atau grid anak agar tidak bertabrakan saat scroll.
+            if (el.querySelector('.grid, [class*="sticky"]')) return;
             tandai(el);
         });
 
         document.querySelectorAll('body > div.w-full .grid, main:not(.bx) .grid').forEach(function (grid) {
             if (skipContainer(grid) || grid.closest('.reveal')) return;
             if (grid.children.length < 2) return;
+            // Jangan animasikan grid 12-kolom utama pembungkus layout halaman (kiri-kanan sticky sidebar).
+            if (grid.classList.contains('lg:grid-cols-12')) return;
             if (!grid.hasAttribute('data-reveal-stagger')) {
                 grid.setAttribute('data-reveal-stagger', '');
             }
@@ -183,19 +187,18 @@ Alpine.start();
             var tampil = new IntersectionObserver(function (masuk) {
                 masuk.forEach(function (item) {
                     var isWatermark = item.target.classList.contains('site-footer__watermark');
-                    var minRatio = isWatermark ? 0.32 : 0.15;
+                    var minRatio = isWatermark ? 0.25 : 0.05;
 
                     if (item.isIntersecting && item.intersectionRatio >= minRatio) {
                         tampilkan(item.target);
-                    } else if (!item.isIntersecting || item.intersectionRatio <= (isWatermark ? 0.06 : 0.01)) {
-                        var rect = item.boundingClientRect;
-                        var diluarViewport = isWatermark || rect.bottom <= 0 || rect.top >= window.innerHeight;
-                        if (diluarViewport) {
-                            sembunyikan(item.target);
+                        if (!isWatermark) {
+                            tampil.unobserve(item.target);
                         }
+                    } else if (isWatermark && (!item.isIntersecting || item.intersectionRatio <= 0.04)) {
+                        sembunyikan(item.target);
                     }
                 });
-            }, { threshold: [0, 0.06, 0.15, 0.32, 0.6] });
+            }, { threshold: [0, 0.05, 0.25] });
 
             semua.forEach(function (el) { tampil.observe(el); });
         } else {

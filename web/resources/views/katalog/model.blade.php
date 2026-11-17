@@ -50,7 +50,7 @@
         ];
     @endphp
 
-    <div class="w-full max-w-[1356px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10">
+    <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-10 space-y-10">
         <!-- Detail Layout: Left Gallery + Overview + Features + Variants | Right Sticky Price Sidebar -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
             <!-- Left Top: Photo Gallery + Color Swatches -->
