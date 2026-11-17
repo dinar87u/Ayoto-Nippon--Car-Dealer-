@@ -31,7 +31,7 @@ class SpkShowTest extends TestCase
         $unit = Unit::create(['vin' => 'VINSHOW01', 'variant_id' => $variant->id, 'color_id' => $warna->id, 'branch_id' => $branch->id, 'status' => 'Dipesan', 'tahun_rakit' => 2026, 'harga' => 100000000]);
         $user = User::factory()->create();
         $customer = Customer::create(['user_id' => $user->id, 'nik' => '1234567890123456', 'nama' => 'Cust', 'telp' => '081200000001', 'alamat' => 'Jl. A']);
-        $order = Order::create(['no_spk' => 'SPK-2026-0001', 'customer_id' => $customer->id, 'unit_id' => $unit->id, 'branch_id' => $branch->id, 'metode' => 'Cash', 'booking_fee' => 5000000, 'status' => 'MenungguBayar', 'deadline_at' => now()->addDay()]);
+        $order = Order::create(['no_spk' => 'SPK-2026-0001', 'customer_id' => $customer->id, 'unit_id' => $unit->id, 'branch_id' => $branch->id, 'metode' => 'Transfer', 'booking_fee' => 5000000, 'status' => 'MenungguBayar', 'deadline_at' => now()->addDay()]);
 
         $respon = $this->actingAs($user)->get(route('spk.show', $order->no_spk));
 
@@ -41,6 +41,12 @@ class SpkShowTest extends TestCase
         $respon->assertSee('Salin');
         $respon->assertSee('Unggah Bukti Transfer');
         $respon->assertSee('VINSHOW01');
+
+        $order->update(['metode' => 'Cash']);
+        $responCash = $this->actingAs($user)->get(route('spk.show', $order->no_spk));
+        $responCash->assertOk();
+        $responCash->assertSee('Pembayaran di Kasir Cabang');
+        $responCash->assertDontSee('Unggah Bukti Transfer');
     }
 
     public function test_staf_dibatasi_cabang_kecuali_manajemen(): void

@@ -56,25 +56,6 @@ class StaffNotifTest extends TestCase
             && str_contains($job->subject, 'test drive baru'));
     }
 
-    public function test_trade_in_baru_mengirim_email_ke_admin(): void
-    {
-        Queue::fake();
-        config()->set('mail.workshop_to', null);
-        $this->seed(RoleSeeder::class);
-        $this->buatCabang();
-        $admin = User::factory()->create(['email' => 'tradeadmin@ayotonippon.com']);
-        $admin->assignRole('admin-cabang');
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->post(route('trade-in.store'), [
-            'nama' => 'Cust', 'nik' => '1234567890123456', 'telp' => '081200000001', 'alamat' => 'Jl. A',
-            'merk_tipe' => 'Lama X', 'tahun' => 2015, 'km' => 80000,
-        ])->assertRedirect();
-
-        Queue::assertPushed(SendMailJob::class, fn ($job) => $job->to === 'tradeadmin@ayotonippon.com'
-            && str_contains($job->subject, 'trade-in baru'));
-    }
-
     public function test_sparepart_baru_mengirim_email_ke_admin_cabang(): void
     {
         Queue::fake();
@@ -123,7 +104,7 @@ class StaffNotifTest extends TestCase
 
         $this->get(route('spk.create', ['variant_id' => $variant->id, 'color_id' => $warna->id]))
             ->assertOk()
-            ->assertSee('value="'.$warna->id.'" selected', false);
+            ->assertSee('id="color_id" value="'.$warna->id.'"', false);
     }
 
     public function test_spk_prefill_dari_simulasi(): void

@@ -5,7 +5,6 @@
             <div class="flex flex-col">
                 <span class="text-lg font-extrabold tracking-tight text-ink group-hover:text-accent flex items-center gap-1.5 transition-colors">
                     Ayoto Nippon
-                    <span class="w-2 h-2 rounded-full bg-accent-strong"></span>
                 </span>
                 <span class="text-[10px] tracking-widest uppercase text-muted font-semibold -mt-0.5">Official Dealer</span>
             </div>

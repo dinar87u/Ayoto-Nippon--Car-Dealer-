@@ -3,11 +3,6 @@
 
     <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
         <div class="mb-8">
-            <nav class="flex items-center gap-2 text-xs text-muted mb-2">
-                <a href="{{ route('home') }}" class="hover:text-accent transition-colors">Beranda</a>
-                <span>/</span>
-                <span class="text-ink font-medium">Lacak SPK</span>
-            </nav>
             <h1 class="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">Lacak Status Pemesanan SPK</h1>
             <p class="mt-2 text-sm sm:text-base text-muted max-w-3xl leading-relaxed">
                 Pantau proses verifikasi pembayaran tanda jadi, alokasi nomor rangka kendaraan, penerbitan faktur, dan jadwal serah terima mobil baru Anda.
@@ -24,8 +19,7 @@
                         <p class="text-xs font-semibold tracking-wider text-accent uppercase">Pencarian Dokumen</p>
                         <h2 class="mt-1 text-xl sm:text-2xl font-bold text-ink">Masukkan Nomor Registrasi</h2>
                     </div>
-                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-pulse"></span>
+                    <span class="inline-flex items-center text-xs font-medium text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
                         Sistem Online Real-Time
                     </span>
                 </div>

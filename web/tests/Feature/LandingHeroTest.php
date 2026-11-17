@@ -41,10 +41,9 @@ class LandingHeroTest extends TestCase
         $respon = $this->get(route('home'));
 
         $respon->assertOk();
-        $respon->assertSee('Katalog Unit Siap Kirim');
-        $respon->assertSee('Harga OTR Mulai');
-        $respon->assertSee('unit ready stock');
-        $respon->assertDontSee('Ready Stock');
+        $respon->assertSee('Katalog Kami');
+        $respon->assertSee('Lihat Katalog');
+        $respon->assertSee('Harga OTR resmi');
     }
 
     public function test_admin_dapat_menambah_foto_hero(): void
@@ -52,7 +51,7 @@ class LandingHeroTest extends TestCase
         Storage::fake('public');
         $this->seed(RoleSeeder::class);
         $admin = User::factory()->create();
-        $admin->assignRole('admin-cabang');
+        $admin->assignRole('superadmin');
 
         $respon = $this->actingAs($admin)->post(route('admin.hero-slides.store'), [
             'nama' => 'Foto Avanza',

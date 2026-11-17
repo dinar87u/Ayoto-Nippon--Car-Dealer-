@@ -17,10 +17,18 @@ class VerifyController extends Controller
 {
     public function index()
     {
-        $orders = Order::with(['customer', 'unit.variant.carModel.brand', 'branch'])
+        $orders = Order::with(['customer', 'unit.variant.carModel.brand', 'unit.color', 'branch.bankAccounts', 'leasing'])
             ->where('status', 'MenungguVerifikasi')
             ->orderBy('updated_at')
             ->paginate(15);
+
+        // SPK yang sudah diterbitkan tapi belum ada bukti bayar — agar admin tahu
+        // kenapa antrean bisa kosong dan bisa mengejar pembeli via WA.
+        $menungguBayar = Order::with(['customer', 'unit.variant.carModel.brand', 'branch'])
+            ->where('status', 'MenungguBayar')
+            ->orderBy('deadline_at')
+            ->limit(10)
+            ->get();
 
         $riwayat = Order::with(['customer', 'unit.variant.carModel.brand', 'branch', 'invoice', 'verifier'])
             ->whereNotNull('verified_at')
@@ -28,21 +36,27 @@ class VerifyController extends Controller
             ->limit(10)
             ->get();
 
-        return view('admin.verify.index', compact('orders', 'riwayat'));
+        return view('admin.verify.index', compact('orders', 'menungguBayar', 'riwayat'));
     }
 
     public function update(Request $request, Order $order)
     {
-        abort_if($order->status !== 'MenungguVerifikasi', 422, 'Hanya SPK MenungguVerifikasi yang bisa diverifikasi.');
-
         $data = $request->validate([
             'keputusan' => ['required', 'in:terima,tolak'],
             'tolak_aksi' => ['required_if:keputusan,tolak', 'nullable', 'in:perpanjang,batal'],
-            'tolak_alasan' => ['required_if:keputusan,tolak', 'nullable', 'string'],
+            'tolak_alasan' => ['required_if:keputusan,tolak', 'nullable', 'string', 'max:500'],
         ]);
 
-        DB::transaction(function () use ($data, $order, $request) {
+        $sudahDiproses = DB::transaction(function () use ($data, $order, $request) {
+            // Kunci baris & cek ulang di dalam transaksi: dua admin tidak bisa memproses SPK yang sama sekaligus.
+            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if ($order->status !== 'MenungguVerifikasi') {
+                return $order->status;
+            }
+
             if ($data['keputusan'] === 'terima') {
+                abort_if(! $order->bukti_path, 422, 'Tidak ada bukti bayar untuk diverifikasi.');
+
                 $order->update([
                     'status' => 'Deal',
                     'verified_by' => $request->user()->id,
@@ -50,7 +64,8 @@ class VerifyController extends Controller
                     'tolak_alasan' => null,
                 ]);
                 $order->unit()->update(['status' => 'Terjual']);
-                $order->customer->leads()->latest()->first()?->update(['status' => 'Deal']);
+                // Lead SPK terakhir milik customer ini naik ke Deal.
+                $order->customer->leads()->where('status', 'SPK')->latest()->first()?->update(['status' => 'Deal']);
 
                 $tahun = now()->format('Y');
                 $iseq = Invoice::where('no_inv', 'like', "INV-{$tahun}-%")->lockForUpdate()->count() + 1;
@@ -76,9 +91,18 @@ class VerifyController extends Controller
                 ]);
                 if ($data['tolak_aksi'] === 'batal') {
                     $order->unit()->update(['status' => 'Tersedia']);
+                    // Lead SPK terakhir milik customer ini ikut dibatalkan.
+                    $order->customer->leads()->where('status', 'SPK')->latest()->first()?->update(['status' => 'Batal']);
                 }
             }
+
+            return null;
         });
+
+        if ($sudahDiproses !== null) {
+            return redirect()->route('admin.verify.index')
+                ->with('sukses', "SPK {$order->no_spk} sudah diproses sebelumnya ({$sudahDiproses}).");
+        }
 
         $fresh = $order->fresh();
         $pesan = $fresh->status === 'Deal' ? Notifikasi::spkDeal($fresh) : Notifikasi::spkTolak($fresh);

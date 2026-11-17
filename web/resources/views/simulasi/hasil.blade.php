@@ -3,13 +3,6 @@
 
     <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
         <div class="mb-8">
-            <nav class="flex items-center gap-2 text-xs text-muted mb-2">
-                <a href="{{ route('home') }}" class="hover:text-accent transition-colors">Beranda</a>
-                <span>/</span>
-                <a href="{{ route('simulasi.form') }}" class="hover:text-accent transition-colors">Simulasi Kredit</a>
-                <span>/</span>
-                <span class="text-ink font-medium">Hasil Estimasi</span>
-            </nav>
             <h1 class="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">Hasil Estimasi Pembiayaan</h1>
             <p class="mt-2 text-sm sm:text-base text-muted max-w-3xl leading-relaxed">
                 Berikut adalah simulasi rincian angsuran untuk {{ $variant->carModel->brand->nama }} {{ $variant->carModel->nama }} {{ $variant->nama }} melalui {{ $leasing->nama }}.

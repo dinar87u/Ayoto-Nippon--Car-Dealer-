@@ -1,4 +1,4 @@
-<x-site-layout judul="Pesanan Saya" robots="noindex, nofollow" deskripsi="Riwayat SPK, test drive, servis, trade-in, dan order sparepart Anda di Ayoto Nippon.">
+<x-site-layout judul="Pesanan Saya" robots="noindex, nofollow" deskripsi="Riwayat SPK, test drive, servis, dan order sparepart Anda di Ayoto Nippon.">
     <x-site-header />
 
     <div class="w-full px-4 sm:px-6 lg:px-8 py-10 space-y-10">
@@ -33,7 +33,7 @@
                                 </a>
                                 <p class="text-xs sm:text-sm text-muted truncate">
                                     {{ $order->unit->variant->carModel->brand->nama ?? '' }} {{ $order->unit->variant->carModel->nama ?? '' }} {{ $order->unit->variant->nama ?? '' }}
-                                    <span class="text-muted">•</span>
+                                    <span class="text-muted">-</span>
                                     <span class="text-muted">{{ $order->branch->nama }}</span>
                                 </p>
                             </div>
@@ -67,7 +67,7 @@
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <span class="font-bold text-sm text-ink">{{ $td->variant->carModel->brand->nama }} {{ $td->variant->carModel->nama }} {{ $td->variant->nama }}</span>
-                                <p class="text-xs text-muted mt-0.5 tabular-nums">{{ $td->jadwal->format('d M Y H:i') }} WIB • Cabang {{ $td->branch->nama }}</p>
+                                <p class="text-xs text-muted mt-0.5 tabular-nums">{{ $td->jadwal->format('d M Y H:i') }} WIB - Cabang {{ $td->branch->nama }}</p>
                             </div>
                             <x-status-badge :status="$td->status" />
                         </div>
@@ -114,7 +114,7 @@
                             <div>
                                 <span class="font-mono font-bold text-sm text-ink">{{ $svc->no_svc }}</span>
                                 <span class="text-xs text-muted font-mono ms-2 px-2 py-0.5 bg-surface border border-line rounded-md">{{ $svc->nopol }}</span>
-                                <p class="text-xs text-muted mt-1 tabular-nums">{{ $svc->jadwal->format('d M Y H:i') }} WIB • Cabang {{ $svc->branch->nama }}</p>
+                                <p class="text-xs text-muted mt-1 tabular-nums">{{ $svc->jadwal->format('d M Y H:i') }} WIB - Cabang {{ $svc->branch->nama }}</p>
                             </div>
                             <div class="flex items-center gap-3">
                                 @if ($svc->status === 'Selesai')
@@ -155,35 +155,7 @@
             </div>
         </section>
 
-        <!-- Section 4: Trade-In -->
-        <section aria-labelledby="riwayat-ti" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-xl">
-            <div class="px-6 py-4 bg-surface border-b border-line">
-                <h2 id="riwayat-ti" class="font-bold text-base text-ink">Tukar Tambah (Trade-In)</h2>
-                <p class="text-xs text-muted">Hasil taksiran nilai jual mobil lama Anda oleh tim appraisal.</p>
-            </div>
-            <div class="divide-y divide-line">
-                @forelse ($tradeIns as $ti)
-                    <div class="px-6 py-4 flex flex-wrap items-center justify-between gap-3 hover:bg-surface-2 transition-colors">
-                        <div>
-                            <span class="font-bold text-sm text-ink">{{ $ti->merk_tipe }} (Tahun {{ $ti->tahun }})</span>
-                            @if ($ti->harga_penawaran)
-                                <p class="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 tabular-nums mt-0.5">Penawaran Appraisal: Rp {{ number_format($ti->harga_penawaran, 0, ',', '.') }}</p>
-                            @else
-                                <p class="text-xs text-muted mt-0.5">Menunggu jadwal inspeksi fisik oleh staf appraisal.</p>
-                            @endif
-                        </div>
-                        <x-status-badge :status="$ti->status" />
-                    </div>
-                @empty
-                    <div class="px-6 py-8 text-center text-sm text-muted">
-                        <p>Belum ada pengajuan tukar tambah.</p>
-                        <a href="{{ route('trade-in.create') }}" class="mt-2 inline-block font-semibold text-accent hover:underline">Ajukan Trade-In</a>
-                    </div>
-                @endforelse
-            </div>
-        </section>
-
-        <!-- Section 5: Order Sparepart -->
+        <!-- Section 4: Order Sparepart -->
         <section aria-labelledby="riwayat-spo" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-xl">
             <div class="px-6 py-4 bg-surface border-b border-line">
                 <h2 id="riwayat-spo" class="font-bold text-base text-ink">Pesanan Suku Cadang (SPO)</h2>
@@ -198,7 +170,7 @@
                             </a>
                             <span class="text-xs sm:text-sm text-muted tabular-nums">
                                 Total: Rp {{ number_format($spo->total, 0, ',', '.') }}
-                                <span class="text-muted">•</span>
+                                <span class="text-muted">-</span>
                                 <span class="text-muted">{{ $spo->branch->nama }}</span>
                             </span>
                         </div>

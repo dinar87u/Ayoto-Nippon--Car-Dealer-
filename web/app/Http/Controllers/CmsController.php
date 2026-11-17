@@ -41,7 +41,7 @@ class CmsController extends Controller
 
     public function sitemap()
     {
-        $statis = ['home', 'katalog.index', 'simulasi.form', 'test-drive.create', 'trade-in.create', 'servis.create', 'sparepart.index', 'promo.index', 'cabang.index', 'faq.index', 'lacak.form'];
+        $statis = ['home', 'katalog.index', 'simulasi.form', 'test-drive.create', 'servis.create', 'sparepart.index', 'promo.index', 'cabang.index', 'faq.index'];
         $urls = [];
         foreach ($statis as $nama) {
             $urls[] = ['loc' => route($nama), 'lastmod' => now()->toDateString()];

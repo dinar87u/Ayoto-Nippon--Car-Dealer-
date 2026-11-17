@@ -22,11 +22,16 @@ class LeadController extends Controller
         $leads = Lead::with(['customer', 'sales'])
             ->when($data['status'] ?? null, fn ($q, $s) => $q->where('status', $s))
             ->when($data['sales'] ?? null, fn ($q, $id) => $q->where('sales_id', $id))
-            ->latest()->paginate(15)->withQueryString();
+            ->orderBy('id')->paginate(15)->withQueryString();
 
         $salesList = User::role('sales')->orderBy('name')->get();
 
-        return view('admin.leads.index', compact('leads', 'salesList'));
+        // Hitungan per status untuk chip filter.
+        $jumlah = collect(['Baru', 'Dihubungi', 'TestDrive', 'SPK', 'Deal', 'Lunas', 'Batal'])
+            ->mapWithKeys(fn ($s) => [$s => Lead::where('status', $s)->count()])
+            ->put('semua', Lead::count());
+
+        return view('admin.leads.index', compact('leads', 'salesList', 'jumlah'));
     }
 
     public function show(Lead $lead)

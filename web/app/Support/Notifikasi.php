@@ -156,14 +156,6 @@ class Notifikasi
             ."\n".self::tutup(null);
     }
 
-    public static function tradeInBaruUntukAdmin($tradeIn): string
-    {
-        return "Yth. tim admin,\nPengajuan trade-in baru dari {$tradeIn->customer->nama} ({$tradeIn->customer->telp})."
-            ."\nUnit lama: {$tradeIn->merk_tipe} tahun {$tradeIn->tahun}, KM ".number_format($tradeIn->km, 0, ',', '.').($tradeIn->order_id ? " (tertaut SPK ID {$tradeIn->order_id})" : '')
-            ."\nMohon segera jadwalkan inspeksi."
-            ."\n".self::tutup(null);
-    }
-
     public static function testDriveBatalUntukCustomer($testDrive): string
     {
         $v = $testDrive->variant;
@@ -171,19 +163,6 @@ class Notifikasi
         return self::sapa($testDrive->customer->nama)."\nPengajuan test drive {$v->carModel->nama} {$v->nama} kami batalkan."
             ."\nHubungi {$testDrive->branch->nama} untuk menjadwalkan ulang."
             ."\n".self::tutup($testDrive->branch);
-    }
-
-    public static function tradeInStatusUntukCustomer($tradeIn): string
-    {
-        $kalimat = match ($tradeIn->status) {
-            'Inspeksi' => "Pengajuan trade-in {$tradeIn->merk_tipe} tahun {$tradeIn->tahun} masuk tahap inspeksi. Tim kami akan menghubungi jadwalnya.",
-            'Ditawar' => "Kendaraan Anda kami tawar Rp ".self::rp($tradeIn->harga_penawaran ?? 0).'. Silakan konfirmasi setuju atau tolak ke admin cabang.',
-            'Deal' => "Trade-in {$tradeIn->merk_tipe} tahun {$tradeIn->tahun} Deal dengan harga Rp ".self::rp($tradeIn->harga_penawaran ?? 0).'.',
-            default => "Pengajuan trade-in {$tradeIn->merk_tipe} tahun {$tradeIn->tahun} belum dapat kami terima.",
-        };
-
-        return self::sapa($tradeIn->customer->nama)."\n{$kalimat}"
-            ."\n".self::tutup(null);
     }
 
     public static function spoBaruUntukAdmin($order): string

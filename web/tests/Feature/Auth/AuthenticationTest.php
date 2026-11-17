@@ -13,8 +13,8 @@ class AuthenticationTest extends TestCase
 
     public function test_login_screen_can_be_rendered(): void
     {
-        $this->get('/login')->assertStatus(200)->assertSee('Portal Pelanggan');
-        $this->get('/loginadmin')->assertStatus(200)->assertSee('Portal Staf');
+        $this->get('/login')->assertStatus(200)->assertSee('Selamat datang kembali!');
+        $this->get('/loginadmin')->assertStatus(200)->assertSee('Masuk Portal Staf');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

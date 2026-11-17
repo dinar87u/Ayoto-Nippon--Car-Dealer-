@@ -9,9 +9,9 @@ class HeroSlideSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach (['foto-8.jpg', 'foto-7.jpg', 'foto-9.jpg'] as $i => $foto) {
+        foreach (['images/hero-car.webp', 'images/unit/foto-7.jpg', 'images/unit/foto-9.jpg'] as $i => $foto) {
             HeroSlide::firstOrCreate(
-                ['foto' => 'images/unit/'.$foto],
+                ['foto' => $foto],
                 ['nama' => 'Default '.($i + 1), 'urutan' => $i, 'aktif' => true]
             );
         }

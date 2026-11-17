@@ -11,7 +11,6 @@ use App\Models\Order;
 use App\Models\ServiceBooking;
 use App\Models\SparepartOrder;
 use App\Models\TestDrive;
-use App\Models\TradeIn;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Variant;
@@ -40,10 +39,9 @@ class PesananSayaTest extends TestCase
         $order = Order::create(['no_spk' => 'SPK-2026-0001', 'customer_id' => $customer->id, 'unit_id' => $unit->id, 'branch_id' => $branch->id, 'metode' => 'Cash', 'booking_fee' => 5000000, 'status' => 'MenungguBayar', 'deadline_at' => now()->addDay()]);
         $td = TestDrive::create(['customer_id' => $customer->id, 'branch_id' => $branch->id, 'variant_id' => $variant->id, 'jadwal' => now()->addDays(2), 'status' => 'Menunggu']);
         $svc = ServiceBooking::create(['no_svc' => 'SVC-2026-0001', 'customer_id' => $customer->id, 'branch_id' => $branch->id, 'nopol' => 'B1234CD', 'km' => 10000, 'keluhan' => 'Bunyi', 'jadwal' => now()->addDays(3), 'status' => 'Menunggu']);
-        $ti = TradeIn::create(['customer_id' => $customer->id, 'merk_tipe' => 'Lama X', 'tahun' => 2015, 'km' => 80000]);
         $spo = SparepartOrder::create(['no_spo' => 'SPO-2026-0001', 'customer_id' => $customer->id, 'branch_id' => $branch->id, 'total' => 500000, 'status' => 'MenungguBayar', 'deadline_at' => now()->addDay()]);
 
-        return [$user, $order, $td, $svc, $ti, $spo];
+        return [$user, $order, $td, $svc, $spo];
     }
 
     public function test_pesanan_menampilkan_semua_riwayat(): void
@@ -55,7 +53,6 @@ class PesananSayaTest extends TestCase
         $respon->assertOk();
         $respon->assertSee('SPK-2026-0001');
         $respon->assertSee('SVC-2026-0001');
-        $respon->assertSee('Lama X');
         $respon->assertSee('SPO-2026-0001');
         $respon->assertSee('Varian');
     }

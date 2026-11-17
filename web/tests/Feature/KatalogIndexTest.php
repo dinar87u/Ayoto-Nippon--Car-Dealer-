@@ -48,5 +48,9 @@ class KatalogIndexTest extends TestCase
         $respon->assertSee('330i');
         $respon->assertSee('1 Varian');
         $respon->assertSee('Rp 100.000.000');
+
+        $responGabung = $this->get(route('katalog.index', ['q' => 'Merek 330i']));
+        $responGabung->assertOk();
+        $responGabung->assertSee('330i');
     }
 }

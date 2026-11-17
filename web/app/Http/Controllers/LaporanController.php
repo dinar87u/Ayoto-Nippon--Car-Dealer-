@@ -15,9 +15,11 @@ class LaporanController extends Controller
 {
     public const JENIS = ['penjualan', 'leads', 'stok', 'servis', 'komisi'];
 
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.laporan.index');
+        $default = $request->user()?->hasRole('service-advisor') ? 'servis' : 'penjualan';
+
+        return $this->show($request, $default);
     }
 
     public function show(Request $request, string $jenis)
@@ -31,10 +33,21 @@ class LaporanController extends Controller
         ]);
         $filter = $this->scopeCabang($request, $filter);
 
-        [$headers, $rows] = $this->data($jenis, $filter);
-        $total = $jenis === 'penjualan' ? array_sum(array_column($rows, 5)) : null;
+        [$headers, $allRows] = $this->data($jenis, $filter);
+        $total = $jenis === 'penjualan' ? array_sum(array_column($allRows, 5)) : null;
 
-        return view('admin.laporan.show', compact('jenis', 'headers', 'rows', 'total'));
+        $perPage = 50;
+        $page = max(1, (int) $request->query('page', 1));
+        $rows = array_slice($allRows, ($page - 1) * $perPage, $perPage);
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $rows,
+            count($allRows),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('admin.laporan.show', compact('jenis', 'headers', 'rows', 'total', 'paginator'));
     }
 
     public function export(Request $request, string $jenis)
@@ -112,7 +125,7 @@ class LaporanController extends Controller
             ->where('status', 'Tersedia')
             ->when($filter['cabang'] ?? null, fn ($q, $c) => $q->where('branch_id', $c))
             ->orderBy('created_at')->get()
-            ->map(fn ($u) => [$u->vin, $u->variant->carModel->nama.' '.$u->variant->nama, $u->branch->nama, $u->created_at->diffInDays(now()).' hari', $u->harga]);
+            ->map(fn ($u) => [$u->vin, $u->variant->carModel->nama.' '.$u->variant->nama, $u->branch->nama, (int) floor($u->created_at->diffInDays(now())).' hari', $u->harga]);
 
         return [['VIN', 'Varian', 'Cabang', 'Umur stok', 'Harga (Rp)'], $rows->all()];
     }
@@ -132,14 +145,20 @@ class LaporanController extends Controller
             ->when($filter['cabang'] ?? null, fn ($q, $c) => $q->where('branch_id', $c))
             ->orderBy('name')->get();
         $rows = $salesList->map(function ($sales) use ($filter) {
-            $deal = Lead::where('sales_id', $sales->id)->where('status', 'Deal')
-                ->when($filter['dari'] ?? null, fn ($q, $d) => $q->whereDate('updated_at', '>=', $d))
-                ->when($filter['sampai'] ?? null, fn ($q, $s) => $q->whereDate('updated_at', '<=', $s))
-                ->count();
-            $nilai = Order::where('orders.status', 'Deal')
-                ->whereIn('customer_id', Lead::where('sales_id', $sales->id)->where('status', 'Deal')->select('customer_id'))
+            $customerIds = Lead::where('sales_id', $sales->id)
+                ->whereIn('status', ['Deal', 'Lunas'])
+                ->select('customer_id');
+
+            $ordersQuery = Order::where('orders.status', 'Deal')
+                ->whereIn('orders.customer_id', $customerIds)
                 ->when($filter['cabang'] ?? null, fn ($q, $c) => $q->where('orders.branch_id', $c))
-                ->join('units', 'units.id', '=', 'orders.unit_id')->sum('units.harga');
+                ->when($filter['dari'] ?? null, fn ($q, $d) => $q->whereDate('orders.verified_at', '>=', $d))
+                ->when($filter['sampai'] ?? null, fn ($q, $s) => $q->whereDate('orders.verified_at', '<=', $s));
+
+            $deal = (clone $ordersQuery)->count();
+            $nilai = (int) (clone $ordersQuery)
+                ->join('units', 'units.id', '=', 'orders.unit_id')
+                ->sum('units.harga');
 
             return [$sales->name, $deal, $nilai, (int) round($nilai * 0.01)];
         })->all();

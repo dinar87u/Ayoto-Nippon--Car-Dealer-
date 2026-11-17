@@ -9,11 +9,25 @@ use Illuminate\Http\Request;
 
 class SparepartAdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $parts = Sparepart::with('branch')->latest()->paginate(15);
+        $filter = $request->query('filter');
 
-        return view('admin.spareparts.index', compact('parts'));
+        $parts = Sparepart::with('branch')
+            ->when($filter === 'aktif', fn ($q) => $q->where('aktif', true))
+            ->when($filter === 'stok-rendah', fn ($q) => $q->where('stok', '<=', 3)->where('stok', '>', 0))
+            ->when($filter === 'habis', fn ($q) => $q->where('stok', 0))
+            ->latest()->paginate(15)->withQueryString();
+
+        // Hitungan untuk chip filter kondisi stok.
+        $jumlah = [
+            'semua' => Sparepart::count(),
+            'aktif' => Sparepart::where('aktif', true)->count(),
+            'stok-rendah' => Sparepart::where('stok', '<=', 3)->where('stok', '>', 0)->count(),
+            'habis' => Sparepart::where('stok', 0)->count(),
+        ];
+
+        return view('admin.spareparts.index', compact('parts', 'jumlah'));
     }
 
     public function create()

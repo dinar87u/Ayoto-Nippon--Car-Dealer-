@@ -76,9 +76,7 @@ class SpkFlowTest extends TestCase
         $response = $this->actingAs($user)->get(route('spk.create', ['unit_id' => $unit->id]));
 
         $content = $response->getContent();
-        // Option label should have car details, but no raw VIN string in the select options label
-        $this->assertStringNotContainsString('Pilih unit (VIN tersedia)', $content);
-        $this->assertStringContainsString('Pilih unit ready stock', $content);
-        $this->assertStringContainsString('pilih unit dari daftar', $content);
+        $this->assertStringNotContainsString($unit->vin, $content);
+        $this->assertStringContainsString('Model &amp; Varian Terpilih', $content);
     }
 }

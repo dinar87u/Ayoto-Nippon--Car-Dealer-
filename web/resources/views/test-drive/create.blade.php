@@ -3,11 +3,6 @@
 
     <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
         <div class="mb-8">
-            <nav class="flex items-center gap-2 text-xs text-muted mb-2">
-                <a href="{{ route('home') }}" class="hover:text-accent transition-colors">Beranda</a>
-                <span>/</span>
-                <span class="text-ink font-medium">Test Drive</span>
-            </nav>
             <h1 class="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">Booking Jadwal Test Drive</h1>
             <p class="mt-2 text-sm sm:text-base text-muted max-w-3xl leading-relaxed">
                 Rasakan performa mesin, kenyamanan suspensi, dan fitur keselamatan mobil impian Anda langsung di jalan sebelum mengambil keputusan pembelian.
@@ -23,7 +18,6 @@
                         <h2 class="mt-1 text-xl sm:text-2xl font-bold text-ink">Isi Data Pengemudi & Unit</h2>
                     </div>
                     <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-pulse"></span>
                         100% Gratis & Tanpa Komitmen
                     </span>
                 </div>
@@ -32,8 +26,7 @@
                     @csrf
 
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-ink mb-4 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-accent-strong"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-ink mb-4">
                             Data Pribadi Pengemudi
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -44,12 +37,14 @@
                                     class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5">
                             </div>
 
+                            @auth
                             <div>
                                 <label for="nik" class="block text-xs font-semibold uppercase tracking-wider text-muted">NIK KTP (16 Digit)</label>
-                                <input id="nik" name="nik" value="{{ old('nik') }}" required inputmode="numeric" maxlength="16" 
+                                <input id="nik" name="nik" value="{{ old('nik') }}" required inputmode="numeric" maxlength="16"
                                     placeholder="3201..."
                                     class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5">
                             </div>
+                            @endauth
 
                             <div>
                                 <label for="telp" class="block text-xs font-semibold uppercase tracking-wider text-muted">Nomor WhatsApp / Telepon</label>
@@ -67,15 +62,14 @@
                     </div>
 
                     <div>
-                        <label for="alamat" class="block text-xs font-semibold uppercase tracking-wider text-muted">Alamat Domisili</label>
-                        <textarea id="alamat" name="alamat" required rows="2" 
+                        <label for="alamat" class="block text-xs font-semibold uppercase tracking-wider text-muted">Alamat Domisili @guest <span class="normal-case text-muted">(Opsional)</span> @endguest</label>
+                        <textarea id="alamat" name="alamat" @auth required @endauth rows="2"
                             placeholder="Alamat lengkap tempat tinggal..."
                             class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent p-3.5">{{ old('alamat') }}</textarea>
                     </div>
 
                     <div class="pt-4 border-t border-line">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-ink mb-4 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-accent-strong"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-ink mb-4">
                             Pilihan Cabang & Unit Kendaraan
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">

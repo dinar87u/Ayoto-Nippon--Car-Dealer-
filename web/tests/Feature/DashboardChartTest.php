@@ -42,7 +42,7 @@ class DashboardChartTest extends TestCase
         $respon->assertSee('1 unit');
     }
 
-    public function test_sales_tidak_melihat_grafik_omzet(): void
+    public function test_sales_melihat_grafik_prospek_spk_dan_mekanik_tidak(): void
     {
         $this->seed(RoleSeeder::class);
         $sales = User::factory()->create();
@@ -51,6 +51,13 @@ class DashboardChartTest extends TestCase
         $respon = $this->actingAs($sales)->get(route('dashboard'));
 
         $respon->assertOk();
-        $respon->assertDontSee('Kembali ke tahun');
+        $respon->assertSee('Nilai Pengajuan & Deal SPK');
+
+        $mekanik = User::factory()->create();
+        $mekanik->assignRole('mekanik');
+
+        $this->actingAs($mekanik)->get(route('dashboard'))
+            ->assertOk()
+            ->assertDontSee('Kembali ke tahun');
     }
 }

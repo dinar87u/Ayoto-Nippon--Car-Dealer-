@@ -27,11 +27,27 @@ class CatalogController extends Controller
             ->sortBy(fn ($v) => array_search($v->slug, $unggulanSlugs))->values();
         $slides = HeroSlide::aktif()->terurut()->get();
         if ($slides->isEmpty()) {
-            $slides = collect(['foto-8.jpg', 'foto-7.jpg', 'foto-9.jpg'])
-                ->map(fn ($foto, $i) => new HeroSlide(['nama' => 'Default '.($i + 1), 'foto' => 'images/unit/'.$foto]));
+            $slides = collect([
+                ['Ayoto Nippon Hero', 'images/hero-car.webp'],
+                ['Default 2', 'images/unit/foto-7.jpg'],
+                ['Default 3', 'images/unit/foto-9.jpg'],
+            ])->map(fn ($slide) => new HeroSlide(['nama' => $slide[0], 'foto' => $slide[1]]));
         }
+        $bungaMin = LeasingPartner::where('aktif', true)->min('bunga_dasar');
+        $tipeBodies = CarModel::where('aktif', true)->whereNotNull('deskripsi')
+            ->get()
+            ->map(fn ($m) => $this->kategoriModel($m)['body'] ?? null)
+            ->filter()
+            ->unique()
+            ->values();
+        $stats = [
+            'unit' => $totalUnit,
+            'cabang' => Branch::where('aktif', true)->count(),
+            'merek' => Brand::where('aktif', true)->count(),
+            'model' => CarModel::where('aktif', true)->count(),
+        ];
 
-        return view('home', compact('brands', 'branches', 'totalUnit', 'promos', 'slides', 'unggulan'));
+        return view('home', compact('brands', 'branches', 'totalUnit', 'promos', 'slides', 'unggulan', 'bungaMin', 'tipeBodies', 'stats'));
     }
 
     public function index(Request $request)
@@ -42,6 +58,7 @@ class CatalogController extends Controller
             'transmisi' => ['nullable', 'in:MT,AT,CVT'],
             'bbm' => ['nullable', 'string', 'max:30'],
             'cabang' => ['nullable', 'string', 'max:20'],
+            'body' => ['nullable', 'string', 'max:30'],
             'harga_min' => ['nullable', 'integer', 'min:0'],
             'harga_maks' => ['nullable', 'integer', 'min:0'],
             'urut' => ['nullable', 'in:termurah,termahal'],
@@ -58,10 +75,17 @@ class CatalogController extends Controller
 
         $models = CarModel::with(['brand', 'variants' => $vFilter, 'variants.priceLists.branch', 'variants.units'])
             ->where('aktif', true)
+            ->when($validated['body'] ?? null, fn ($q, $b) => $q->where('deskripsi', 'like', $b.' %'))
             ->when($validated['brand'] ?? null, fn ($q, $slug) => $q->whereHas('brand', fn ($qq) => $qq->where('slug', $slug)))
-            ->when($validated['q'] ?? null, fn ($q, $s) => $q->where(fn ($qq) => $qq->where('nama', 'like', "%{$s}%")
-                ->orWhereHas('brand', fn ($qqq) => $qqq->where('nama', 'like', "%{$s}%"))
-                ->orWhereHas('variants', fn ($qqq) => $qqq->where('nama', 'like', "%{$s}%"))))
+            ->when($validated['q'] ?? null, function ($q, $s) {
+                $kataKunci = preg_split('/\s+/', trim($s), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                foreach ($kataKunci as $kata) {
+                    $q->where(fn ($qq) => $qq->where('nama', 'like', "%{$kata}%")
+                        ->orWhere('slug', 'like', "%{$kata}%")
+                        ->orWhereHas('brand', fn ($qqq) => $qqq->where('nama', 'like', "%{$kata}%")->orWhere('slug', 'like', "%{$kata}%"))
+                        ->orWhereHas('variants', fn ($qqq) => $qqq->where('aktif', true)->where('nama', 'like', "%{$kata}%")));
+                }
+            })
             ->whereHas('variants', $vFilter)
             ->when($validated['urut'] ?? null, fn ($q, $u) => $q->orderBy(
                 PriceList::selectRaw('MIN(otr)')
@@ -70,7 +94,7 @@ class CatalogController extends Controller
                 $u === 'termahal' ? 'desc' : 'asc'
             ))
             ->orderBy('nama')
-            ->paginate(12)
+            ->paginate(16)
             ->withQueryString();
 
         $brands = Brand::where('aktif', true)->whereHas('carModels.variants', fn ($q) => $q->where('aktif', true))->orderBy('nama')->get();
@@ -95,13 +119,22 @@ class CatalogController extends Controller
         $mulai = $m->variants->flatMap->priceLists->pluck('otr')->filter()->min();
         $cabangStok = $m->variants->flatMap->units->where('status', 'Tersedia')->map(fn ($u) => $u->branch->nama)->unique()->values();
         $bungaMin = LeasingPartner::where('aktif', true)->min('bunga_dasar');
+        $produkSerupa = $this->produkSerupa($m);
 
-        return view('katalog.model', compact('m', 'ringkasan', 'kategori', 'mulai', 'cabangStok', 'bungaMin'));
+        return view('katalog.model', compact('m', 'ringkasan', 'kategori', 'mulai', 'cabangStok', 'bungaMin', 'produkSerupa'));
     }
 
     public function show(string $slug)
     {
-        $variant = Variant::with(['carModel.brand', 'priceLists.branch', 'units.color', 'units.branch'])
+        $variant = Variant::with([
+            'carModel.brand',
+            'carModel.variants' => fn ($q) => $q->where('aktif', true)->orderBy('nama'),
+            'carModel.variants.priceLists.branch',
+            'carModel.variants.units.branch',
+            'priceLists.branch',
+            'units.color',
+            'units.branch',
+        ])
             ->where('slug', $slug)
             ->where('aktif', true)
             ->firstOrFail();
@@ -116,8 +149,48 @@ class CatalogController extends Controller
             ->map(fn ($units) => $units->map(fn ($u) => $u->color?->nama)->filter()->unique()->values());
 
         $leasings = LeasingPartner::where('aktif', true)->orderBy('nama')->get();
+        $varianModel = $variant->carModel->variants;
+        $produkSerupa = $this->produkSerupa($variant->carModel);
 
-        return view('katalog.show', compact('variant', 'stok', 'warnaPerCabang', 'leasings'));
+        return view('katalog.show', compact('variant', 'stok', 'warnaPerCabang', 'leasings', 'varianModel', 'produkSerupa'));
+    }
+
+    private function produkSerupa(CarModel $m)
+    {
+        $kategori = $this->kategoriModel($m);
+        $bodi = $kategori['body'] ?? null;
+
+        $relasi = [
+            'brand',
+            'variants' => fn ($q) => $q->where('aktif', true)->orderBy('nama'),
+            'variants.priceLists.branch',
+            'variants.units',
+        ];
+
+        $kueriDasar = fn () => CarModel::with($relasi)
+            ->where('aktif', true)
+            ->where('id', '!=', $m->id)
+            ->whereHas('variants', fn ($q) => $q->where('aktif', true));
+
+        $hasil = collect();
+
+        if ($bodi) {
+            $hasil = $kueriDasar()
+                ->where('deskripsi', 'like', $bodi.' %')
+                ->limit(3)
+                ->get();
+        }
+
+        if ($hasil->count() < 3) {
+            $tambahan = $kueriDasar()
+                ->whereNotIn('id', $hasil->pluck('id'))
+                ->orderByRaw('brand_id = ? desc', [$m->brand_id])
+                ->limit(3 - $hasil->count())
+                ->get();
+            $hasil = $hasil->concat($tambahan);
+        }
+
+        return $hasil->values();
     }
 
     // Pecah deskripsi "Sedan 5 penumpang" jadi bodi dan kapasitas.

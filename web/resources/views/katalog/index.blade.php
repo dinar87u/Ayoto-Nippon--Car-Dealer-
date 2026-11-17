@@ -2,119 +2,127 @@
     <x-site-header />
 
     <div class="w-full px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-        <!-- Header & Top Stats -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end pb-6 border-b border-line">
-            <div class="lg:col-span-2">
-                <p class="text-xs font-semibold tracking-wider text-accent uppercase">Showroom Digital</p>
-                <h1 class="mt-1 text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">Katalog Kendaraan Baru</h1>
-                <p class="mt-2 text-sm text-muted tabular-nums">
-                    Tersedia <span class="text-ink font-semibold">{{ $models->total() }}</span> model dan <span class="text-ink font-semibold">{{ number_format($totalUnit, 0, ',', '.') }}</span> unit siap kirim di {{ $branches->count() }} cabang dealer resmi Ayoto Nippon.
-                </p>
-            </div>
-            <div class="grid grid-cols-3 gap-3">
-                <div class="bg-surface border border-line rounded-2xl px-3.5 py-3 text-center">
-                    <p class="text-[10px] uppercase tracking-wider text-muted font-medium">Ready Stock</p>
-                    <p class="mt-1 text-lg sm:text-xl font-bold text-ink tabular-nums">{{ number_format($totalUnit, 0, ',', '.') }}</p>
-                </div>
-                <div class="bg-surface border border-line rounded-2xl px-3.5 py-3 text-center">
-                    <p class="text-[10px] uppercase tracking-wider text-muted font-medium">Model</p>
-                    <p class="mt-1 text-lg sm:text-xl font-bold text-ink tabular-nums">{{ $models->total() }}</p>
-                </div>
-                <div class="bg-surface border border-line rounded-2xl px-3.5 py-3 text-center">
-                    <p class="text-[10px] uppercase tracking-wider text-muted font-medium">Cabang</p>
-                    <p class="mt-1 text-lg sm:text-xl font-bold text-ink tabular-nums">{{ $branches->count() }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filter Bar -->
-        <div class="bg-surface border border-line rounded-2xl p-4 shadow-lg shadow-black/5">
-            <form action="{{ route('katalog.index') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
-                <div class="lg:col-span-2">
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama model..." aria-label="Cari nama model"
-                        class="w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[44px] px-3.5">
-                </div>
-
-                <div>
-                    <select name="brand" aria-label="Merek" 
-                        class="w-full bg-surface border border-line rounded-xl text-ink text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[44px] px-3">
-                        <option value="">Semua Merek</option>
-                        @foreach ($brands as $brand)
-                            <option value="{{ $brand->slug }}" @selected(request('brand') === $brand->slug)>{{ $brand->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <select name="transmisi" aria-label="Transmisi" 
-                        class="w-full bg-surface border border-line rounded-xl text-ink text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[44px] px-3">
-                        <option value="">Transmisi</option>
-                        @foreach (['MT', 'AT', 'CVT'] as $t)
-                            <option value="{{ $t }}" @selected(request('transmisi') === $t)>{{ $t }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <select name="bbm" aria-label="BBM" 
-                        class="w-full bg-surface border border-line rounded-xl text-ink text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[44px] px-3">
-                        <option value="">Bahan Bakar</option>
-                        @foreach ($bbms as $b)
-                            <option value="{{ $b }}" @selected(request('bbm') === $b)>{{ $b }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <select name="cabang" aria-label="Cabang" 
-                        class="w-full bg-surface border border-line rounded-xl text-ink text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[44px] px-3">
-                        <option value="">Semua Cabang</option>
-                        @foreach ($branches as $branch)
-                            <option value="{{ $branch->kode }}" @selected(request('cabang') === $branch->kode)>{{ $branch->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="flex gap-2">
-                    <button type="submit" class="flex-1 px-4 py-2 font-semibold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl min-h-[44px] transition-colors flex items-center justify-center">
-                        Filter
-                    </button>
-                    <a href="{{ route('katalog.index') }}" class="px-3 py-2 text-xs font-semibold text-muted hover:text-ink bg-surface border border-line rounded-xl min-h-[44px] inline-flex items-center justify-center transition-colors">
-                        Reset
-                    </a>
-                </div>
-            </form>
+        <!-- Header -->
+        <div class="pb-6 border-b border-line">
+            <p class="text-xs font-semibold tracking-wider text-accent uppercase">Showroom Digital</p>
+            <h1 class="mt-1 text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">Katalog Kendaraan Baru</h1>
+            <p class="mt-2 text-sm text-muted tabular-nums">
+                Tersedia <span class="text-ink font-semibold">{{ $models->total() }}</span> model dan <span class="text-ink font-semibold">{{ number_format($totalUnit, 0, ',', '.') }}</span> unit siap kirim di {{ $branches->count() }} cabang dealer resmi Ayoto Nippon.
+            </p>
         </div>
 
         @php
-            $chipCabang = $branches->firstWhere('kode', request('cabang'))?->nama;
-            $adaFilter = request('q') || request('brand') || request('transmisi') || request('bbm') || request('cabang');
+            $adaFilter = request('q') || request('brand') || request('body') || request('transmisi') || request('bbm') || request('cabang') || request('urut');
+            $labelTransmisi = ['AT' => 'Otomatis (AT)', 'CVT' => 'Otomatis (CVT)', 'MT' => 'Manual (MT)'];
         @endphp
+        <span class="sr-only">{{ $models->total() }} model ditemukan</span>
 
-        <!-- Results Header & Sort Control -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs sm:text-sm">
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="font-bold text-ink tabular-nums">{{ $models->total() }}</span>
-                <span class="text-muted">model ditemukan</span>
-                @if ($adaFilter)
-                    <span class="text-muted">•</span>
-                    <a href="{{ route('katalog.index') }}" class="font-semibold text-accent hover:underline min-h-[44px] inline-flex items-center">Hapus Semua Filter</a>
+        <!-- Easy Interactive Filter Panel -->
+        <div class="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-lg shadow-black/5 space-y-5">
+            <form id="katalog-filter-form" action="{{ route('katalog.index') }}" method="GET" class="space-y-4">
+                @if (request('urut'))
+                    <input type="hidden" name="urut" value="{{ request('urut') }}">
                 @endif
-            </div>
+                @if (request('body'))
+                    <input type="hidden" name="body" value="{{ request('body') }}">
+                @endif
 
-            <form action="{{ route('katalog.index') }}" method="GET" class="flex items-center gap-2 text-muted">
-                @foreach (['q', 'brand', 'transmisi', 'bbm', 'cabang'] as $kunci)
-                    @if (request($kunci))
-                        <input type="hidden" name="{{ $kunci }}" value="{{ request($kunci) }}">
-                    @endif
-                @endforeach
-                <label for="urut" class="text-xs">Urutkan:</label>
-                <select id="urut" name="urut" onchange="this.form.submit()" 
-                    class="bg-surface border border-line rounded-xl text-ink text-xs min-h-[40px] px-3 focus:border-accent focus:ring-1 focus:ring-accent">
-                    <option value="">Rekomendasi Dealer</option>
-                    <option value="termurah" @selected(request('urut') === 'termurah')>Harga Termurah</option>
-                    <option value="termahal" @selected(request('urut') === 'termahal')>Harga Termahal</option>
-                </select>
+                <!-- Single Cohesive Row: Search on Left + 4 Auto-Submit Dropdowns -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end">
+                    <div class="sm:col-span-2 lg:col-span-4">
+                        <label for="filter-q" class="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">Pencarian Mobil</label>
+                        <div class="relative flex items-center">
+                            <svg class="w-4 h-4 text-muted absolute left-3.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.3-4.3"/>
+                            </svg>
+                            <input id="filter-q" type="text" name="q" value="{{ request('q') }}" placeholder="Cth: BYD Seal, Honda Jazz..." aria-label="Cari nama model"
+                                class="w-full bg-surface-2/60 dark:bg-surface border border-line rounded-xl text-ink placeholder-muted text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent h-[44px] pl-10 {{ request('q') ? 'pr-24' : 'pr-16' }}">
+                            @if (request('q'))
+                                <a href="{{ route('katalog.index', request()->except('q', 'page')) }}" aria-label="Hapus pencarian"
+                                   class="absolute right-[62px] w-6 h-6 rounded-full bg-surface border border-line text-muted hover:text-ink hover:border-accent inline-flex items-center justify-center transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </a>
+                            @endif
+                            <button type="submit" class="absolute right-1.5 h-[32px] px-3.5 text-xs font-bold text-white bg-accent-strong hover:bg-[#9E0E19] rounded-lg transition-colors inline-flex items-center justify-center">
+                                Cari
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label for="filter-brand" class="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">Merek Kendaraan</label>
+                        <select id="filter-brand" name="brand" aria-label="Merek" onchange="this.form.submit()"
+                            class="w-full bg-surface-2/60 dark:bg-surface border border-line rounded-xl text-ink text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent h-[44px] px-3.5">
+                            <option value="">Semua Merek ({{ $brands->count() }})</option>
+                            @foreach ($brands as $brand)
+                                <option value="{{ $brand->slug }}" @selected(request('brand') === $brand->slug)>{{ $brand->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label for="filter-transmisi" class="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">Transmisi</label>
+                        <select id="filter-transmisi" name="transmisi" aria-label="Transmisi" onchange="this.form.submit()"
+                            class="w-full bg-surface-2/60 dark:bg-surface border border-line rounded-xl text-ink text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent h-[44px] px-3.5">
+                            <option value="">Semua Transmisi</option>
+                            @foreach (['AT', 'CVT', 'MT'] as $t)
+                                <option value="{{ $t }}" @selected(request('transmisi') === $t)>{{ $labelTransmisi[$t] ?? $t }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label for="filter-bbm" class="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">Bahan Bakar</label>
+                        <select id="filter-bbm" name="bbm" aria-label="BBM" onchange="this.form.submit()"
+                            class="w-full bg-surface-2/60 dark:bg-surface border border-line rounded-xl text-ink text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent h-[44px] px-3.5">
+                            <option value="">Semua Bahan Bakar</option>
+                            @foreach ($bbms as $b)
+                                <option value="{{ $b }}" @selected(request('bbm') === $b)>{{ $b }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label for="filter-cabang" class="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">Lokasi Cabang</label>
+                        <select id="filter-cabang" name="cabang" aria-label="Cabang" onchange="this.form.submit()"
+                            class="w-full bg-surface-2/60 dark:bg-surface border border-line rounded-xl text-ink text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent h-[44px] px-3.5">
+                            <option value="">Semua Cabang Dealer</option>
+                            @foreach ($branches as $branch)
+                                <option value="{{ $branch->kode }}" @selected(request('cabang') === $branch->kode)>{{ $branch->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                @if ($adaFilter)
+                    @php
+                        $namaMerekAktif = $brands->firstWhere('slug', request('brand'))?->nama;
+                        $namaCabangAktif = $branches->firstWhere('kode', request('cabang'))?->nama;
+                        $chipAktif = array_filter([
+                            'q' => request('q') ? 'Pencarian: "'.request('q').'"' : null,
+                            'body' => request('body') ? 'Tipe: '.request('body') : null,
+                            'brand' => $namaMerekAktif ? 'Merek: '.$namaMerekAktif : null,
+                            'transmisi' => request('transmisi') ? 'Transmisi: '.($labelTransmisi[request('transmisi')] ?? request('transmisi')) : null,
+                            'bbm' => request('bbm') ? 'BBM: '.request('bbm') : null,
+                            'cabang' => $namaCabangAktif ? 'Cabang: '.$namaCabangAktif : null,
+                        ]);
+                    @endphp
+                    <div class="pt-3.5 border-t border-line flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-muted font-medium">Filter aktif:</span>
+                            @foreach ($chipAktif as $kunci => $teksChip)
+                                <a href="{{ route('katalog.index', request()->except($kunci, 'page')) }}"
+                                   class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-2 border border-line text-ink font-semibold leading-none hover:border-accent transition-colors">
+                                    <span>{{ $teksChip }}</span>
+                                    <svg class="w-3 h-3 text-muted shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </a>
+                            @endforeach
+                        </div>
+                        <a href="{{ route('katalog.index') }}" class="font-bold text-accent hover:underline py-1">
+                            Hapus Semua Filter
+                        </a>
+                    </div>
+                @endif
             </form>
         </div>
 
@@ -131,7 +139,7 @@
                 </a>
             </div>
         @else
-            <div class="reveal grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 xl:gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 @foreach ($models as $model)
                     @php
                         $tersedia = $model->variants->flatMap->units->where('status', 'Tersedia');
@@ -139,52 +147,104 @@
                         $harga = $model->variants->flatMap(function ($v) use ($kodeCabang) {
                             return $kodeCabang ? $v->priceLists->where('branch.kode', $kodeCabang) : $v->priceLists;
                         })->min('otr');
+
+                        $bodi = null;
+                        $kursi = null;
+                        if ($model->deskripsi && preg_match('/^(.*)\s+(\d+)\s+penumpang$/', $model->deskripsi, $cocok)) {
+                            $bodi = trim($cocok[1]);
+                            $kursi = $cocok[2].' Kursi';
+                        }
+
+                        $transmisi = $model->variants->pluck('transmisi')->unique()->filter()->join(' / ') ?: '-';
+                        $bbm = $model->variants->pluck('bbm')->unique()->filter()->join(' / ') ?: '-';
+                        $hargaTeks = $harga ? 'Rp '.number_format($harga, 0, ',', '.') : 'Hubungi Cabang';
+                        $stokTeks = $tersedia->count().' Unit ('.$model->variants->count().' Varian)';
+                        $varianUtama = $model->variants->sortBy(fn ($v) => $v->priceLists->min('otr') ?? PHP_INT_MAX)->first() ?? $model->variants->first();
+                        $tautanDetail = $varianUtama ? route('katalog.show', $varianUtama->slug) : route('katalog.model', [$model->brand->slug, $model->slug]);
                     @endphp
-                    <a href="{{ route('katalog.model', [$model->brand->slug, $model->slug]) }}" 
-                       class="group bg-surface border border-line rounded-3xl overflow-hidden flex flex-col transition-all duration-300 hover:border-accent hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                        <div class="relative bg-surface overflow-hidden">
-                            @if ($foto)
-                                <img src="{{ asset($foto) }}" alt="{{ $model->brand->nama }} {{ $model->nama }}" class="h-52 w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
-                            @else
-                                <div class="h-52 w-full bg-surface flex items-center justify-center text-sm text-muted">Foto menyusul</div>
-                            @endif
-                            <div class="absolute top-3 left-3">
-                                <x-status-badge status="{{ $tersedia->isNotEmpty() ? 'Tersedia' : 'Dipesan' }}" />
-                            </div>
-                        </div>
-
-                        <div class="p-5 xl:p-6 flex flex-col flex-1 justify-between">
-                            <div>
-                                <p class="text-xs font-semibold text-muted uppercase tracking-wider">{{ $model->brand->nama }}</p>
-                                <h2 class="mt-1 text-xl font-bold text-ink group-hover:text-accent transition-colors">{{ $model->nama }}</h2>
-                                
-                                <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                                    <span class="px-2.5 py-1 bg-surface border border-line rounded-lg text-muted font-medium">{{ $model->variants->count() }} Varian</span>
-                                    <span class="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-700 dark:text-emerald-300 font-semibold tabular-nums">{{ $tersedia->count() }} unit siap kirim</span>
+                    <a href="{{ $tautanDetail }}"
+                       class="group bg-surface-2/80 dark:bg-surface border border-line rounded-3xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 hover:border-accent hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                        <div>
+                            <div class="relative rounded-2xl overflow-hidden bg-surface aspect-[16/10]">
+                                @if ($foto)
+                                    <img src="{{ asset($foto) }}" alt="{{ $model->brand->nama }} {{ $model->nama }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                                @else
+                                    <div class="h-full w-full flex items-center justify-center text-sm text-muted">Foto menyusul</div>
+                                @endif
+                                <div class="absolute top-3 left-3 rounded-full bg-surface/90 backdrop-blur-sm shadow-sm">
+                                    <x-status-badge status="{{ $tersedia->isNotEmpty() ? 'Tersedia' : 'Dipesan' }}" />
                                 </div>
                             </div>
 
-                            <div class="mt-6 pt-4 border-t border-line">
-                                <p class="text-[11px] text-muted font-medium">Harga OTR Mulai{{ $kodeCabang ? ' ('.$chipCabang.')' : '' }}</p>
-                                <p class="mt-0.5 text-lg xl:text-xl font-extrabold text-ink tabular-nums tracking-tight">
-                                    {{ $harga ? 'Rp '.number_format($harga, 0, ',', '.') : 'Hubungi Cabang' }}
-                                </p>
-
-                                <div class="mt-4 pt-3 border-t border-line grid grid-cols-2 gap-2 text-xs text-muted">
-                                    <div>
-                                        <span class="block text-[10px] uppercase tracking-wider text-muted">Transmisi</span>
-                                        <strong class="text-ink mt-0.5 block truncate">{{ $model->variants->pluck('transmisi')->unique()->join(', ') }}</strong>
-                                    </div>
-                                    <div>
-                                        <span class="block text-[10px] uppercase tracking-wider text-muted">Bahan Bakar</span>
-                                        <strong class="text-ink mt-0.5 block truncate">{{ $model->variants->pluck('bbm')->unique()->join(', ') }}</strong>
-                                    </div>
+                            <div class="mt-4 flex items-baseline justify-between gap-2">
+                                <div class="min-w-0">
+                                    <p class="text-[11px] font-semibold text-muted uppercase tracking-wider truncate">{{ $model->brand->nama }}</p>
+                                    <h2 class="mt-0.5 text-xl font-extrabold text-ink tracking-tight group-hover:text-accent transition-colors truncate">{{ $model->nama }}</h2>
                                 </div>
+                                <span class="text-xs font-semibold text-accent shrink-0 group-hover:translate-x-0.5 transition-transform">Lihat ↗</span>
+                            </div>
 
-                                <div class="mt-5">
-                                    <span class="w-full py-2.5 inline-flex items-center justify-center text-sm font-semibold text-ink bg-surface border border-line group-hover:text-white group-hover:bg-accent-strong group-hover:border-accent rounded-xl transition-all duration-200 min-h-[44px]">
-                                        Pilih Varian
+                            <div class="mt-2.5 pb-3.5 border-b border-line flex items-baseline justify-between gap-2">
+                                <div class="min-w-0">
+                                    <span class="block text-[10px] font-semibold uppercase tracking-wider text-muted">OTR Mulai{{ $kodeCabang ? ' ('.$chipCabang.')' : '' }}</span>
+                                    <strong class="mt-0.5 block text-lg font-black text-ink tracking-tight tabular-nums leading-tight">{{ $hargaTeks }}</strong>
+                                </div>
+                                <span class="text-[11px] font-semibold text-muted shrink-0">{{ $stokTeks }}</span>
+                            </div>
+
+                            <div class="mt-3.5 grid grid-cols-2 gap-x-3 gap-y-3">
+                                {{-- 1. Tempat Duduk --}}
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-8 h-8 rounded-lg border border-[#243B6B]/35 dark:border-white/20 text-[#243B6B] dark:text-slate-200 flex items-center justify-center shrink-0" aria-hidden="true">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 13V6a2 2 0 012-2h6a2 2 0 012 2v7m-10 0h10m-10 0l-1 5h12l-1-5M9 18v2m6-2v2"/>
+                                        </svg>
                                     </span>
+                                    <div class="min-w-0">
+                                        <span class="block text-[10px] font-medium uppercase tracking-wider text-muted">Kursi</span>
+                                        <strong class="block text-[11px] font-bold uppercase text-ink truncate">{{ $kursi ?? '-' }}</strong>
+                                    </div>
+                                </div>
+
+                                {{-- 2. Tipe Bodi --}}
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-8 h-8 rounded-lg border border-[#243B6B]/35 dark:border-white/20 text-[#243B6B] dark:text-slate-200 flex items-center justify-center shrink-0" aria-hidden="true">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l1.5-4.5A2 2 0 018.4 7h7.2a2 2 0 011.9 1.5L19 13m-14 0v4a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-4m-14 0h14M7.5 13.5h.01M16.5 13.5h.01"/>
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <span class="block text-[10px] font-medium uppercase tracking-wider text-muted">Bodi</span>
+                                        <strong class="block text-[11px] font-bold uppercase text-ink truncate">{{ $bodi ?? $model->brand->nama }}</strong>
+                                    </div>
+                                </div>
+
+                                {{-- 3. Transmisi --}}
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-8 h-8 rounded-lg border border-[#243B6B]/35 dark:border-white/20 text-[#243B6B] dark:text-slate-200 flex items-center justify-center shrink-0" aria-hidden="true">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                                            <circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/>
+                                            <circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/>
+                                            <path stroke-linecap="round" d="M6 7.5v9M12 7.5v9M18 7.5V12H6"/>
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <span class="block text-[10px] font-medium uppercase tracking-wider text-muted">Transmisi</span>
+                                        <strong class="block text-[11px] font-bold uppercase text-ink truncate">{{ $transmisi }}</strong>
+                                    </div>
+                                </div>
+
+                                {{-- 4. Bahan Bakar --}}
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-8 h-8 rounded-lg border border-[#243B6B]/35 dark:border-white/20 text-[#243B6B] dark:text-slate-200 flex items-center justify-center shrink-0" aria-hidden="true">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 20V5a2 2 0 012-2h6a2 2 0 012 2v15M4 20h12M8 7h4v4H8V7zm7 3h1.5a1.5 1.5 0 011.5 1.5v5a1.5 1.5 0 003 0V9.5l-2-2"/>
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <span class="block text-[10px] font-medium uppercase tracking-wider text-muted">Bahan Bakar</span>
+                                        <strong class="block text-[11px] font-bold uppercase text-ink truncate">{{ $bbm }}</strong>
+                                    </div>
                                 </div>
                             </div>
                         </div>

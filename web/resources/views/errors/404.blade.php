@@ -21,7 +21,6 @@
         <div class="mt-6 flex flex-wrap justify-center gap-2">
             <a href="{{ route('home') }}" class="px-5 py-2.5 text-xs font-bold text-muted hover:text-ink bg-surface border border-line rounded-xl min-h-[44px] inline-flex items-center transition-colors">Beranda</a>
             <a href="{{ route('katalog.index') }}" class="px-5 py-2.5 text-xs font-bold text-muted hover:text-ink bg-surface border border-line rounded-xl min-h-[44px] inline-flex items-center transition-colors">Katalog Mobil</a>
-            <a href="{{ route('lacak.form') }}" class="px-5 py-2.5 text-xs font-bold text-muted hover:text-ink bg-surface border border-line rounded-xl min-h-[44px] inline-flex items-center transition-colors">Lacak Status SPK</a>
         </div>
     </div>
 

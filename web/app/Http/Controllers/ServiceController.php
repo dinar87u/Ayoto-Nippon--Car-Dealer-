@@ -24,14 +24,25 @@ class ServiceController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $bookings = ServiceBooking::with(['customer', 'branch', 'mekanik'])
-            ->when($request->status, fn ($q, $s) => $q->where('status', $s))
-            ->when($user->hasRole('mekanik'), fn ($q) => $q->where('mekanik_id', $user->id))
+
+        // Lingkup data mengikuti peran: mekanik = tugasnya atau antrean cabang belum ditugaskan, SA/admin-cabang = cabangnya.
+        $lingkup = ServiceBooking::query()
+            ->when($user->hasRole('mekanik'), fn ($q) => $q->where(fn ($qq) => $qq->where('mekanik_id', $user->id)->orWhereNull('mekanik_id')))
             ->when($user->hasAnyRole(['service-advisor', 'admin-cabang', 'mekanik']) && $user->branch_id,
-                fn ($q) => $q->where('branch_id', $user->branch_id))
+                fn ($q) => $q->where('branch_id', $user->branch_id));
+
+        $bookings = (clone $lingkup)
+            ->with(['customer', 'branch', 'mekanik'])
+            ->when(in_array($request->status, ['Menunggu', 'Dikonfirmasi', 'Dikerjakan', 'Selesai', 'Batal'], true),
+                fn ($q) => $q->where('status', $request->status))
             ->latest()->paginate(15)->withQueryString();
 
-        return view('admin.services.index', compact('bookings'));
+        // Hitungan per status untuk chip filter (ikut lingkup peran).
+        $jumlah = collect(['Menunggu', 'Dikonfirmasi', 'Dikerjakan', 'Selesai', 'Batal'])
+            ->mapWithKeys(fn ($s) => [$s => (clone $lingkup)->where('status', $s)->count()])
+            ->put('semua', (clone $lingkup)->count());
+
+        return view('admin.services.index', compact('bookings', 'jumlah'));
     }
 
     public function show(Request $request, ServiceBooking $service)
@@ -42,7 +53,11 @@ class ServiceController extends Controller
             ->when(! $request->user()->hasAnyRole(['pimpinan', 'superadmin', 'owner']),
                 fn ($q) => $q->where('branch_id', $service->branch_id))
             ->orderBy('name')->get();
-        $parts = Sparepart::with('branch')->where('aktif', true)->orderBy('nama')->get();
+        $parts = Sparepart::with('branch')
+            ->where('aktif', true)
+            ->where('branch_id', $service->branch_id)
+            ->orderBy('nama')
+            ->get();
 
         return view('admin.services.show', compact('service', 'mekaniks', 'parts'));
     }
@@ -54,7 +69,7 @@ class ServiceController extends Controller
             return;
         }
         if ($user->hasRole('mekanik')) {
-            abort_if($service->mekanik_id !== $user->id, 403, 'Tugas servis ini bukan tanggung jawab Anda.');
+            abort_if($service->mekanik_id !== null && $service->mekanik_id !== $user->id, 403, 'Tugas servis ini bukan tanggung jawab Anda.');
         }
         abort_if($user->branch_id === null || $service->branch_id !== $user->branch_id, 403, 'Servis ini di luar cabang Anda.');
     }
@@ -149,8 +164,8 @@ class ServiceController extends Controller
         if ($data['status'] === 'Dikonfirmasi' && (int) ($data['estimasi_biaya'] ?? $service->estimasi_biaya) <= 0) {
             throw ValidationException::withMessages(['estimasi_biaya' => 'Estimasi biaya wajib diisi saat konfirmasi booking.']);
         }
-        // Metode pembayaran wajib dipilih saat servis diselesaikan.
-        if ($data['status'] === 'Selesai' && ! ($data['metode_bayar'] ?? $service->metode_bayar)) {
+        // Metode pembayaran wajib dipilih oleh SA/Admin saat servis diselesaikan.
+        if (! $mekanik && $data['status'] === 'Selesai' && ! ($data['metode_bayar'] ?? $service->metode_bayar)) {
             throw ValidationException::withMessages(['metode_bayar' => 'Pilih metode pembayaran (Cash atau Transfer) saat menyelesaikan servis.']);
         }
 
@@ -158,13 +173,11 @@ class ServiceController extends Controller
         if ($mekanik) {
             abort_if(array_key_exists('estimasi_biaya', $data) && (int) $data['estimasi_biaya'] !== (int) $service->estimasi_biaya, 403, 'Estimasi biaya hanya dapat diubah service advisor.');
             abort_if(array_key_exists('mekanik_id', $data) && (int) $data['mekanik_id'] !== (int) $service->mekanik_id, 403, 'Penugasan mekanik hanya dapat diubah service advisor.');
-        } else {
-            abort_if($data['status'] === 'Dikerjakan' && ! $user->hasAnyRole(['pimpinan', 'superadmin', 'owner']), 403, 'Status Dikerjakan hanya dapat ditandai mekanik yang bertugas.');
         }
 
         $mekanikLama = $service->mekanik_id;
         $statusLama = $service->status;
-        DB::transaction(function () use ($data, $service, $mekanik) {
+        DB::transaction(function () use ($data, $service, $mekanik, $user) {
             if ($data['status'] === 'Selesai') {
                 foreach ($service->details()->where('jenis', 'Sparepart')->get() as $detail) {
                     $sp = $detail->sparepart;
@@ -179,7 +192,7 @@ class ServiceController extends Controller
                     'metode_bayar' => $data['metode_bayar'] ?? $service->metode_bayar,
                     'mekanik_id' => $data['mekanik_id'] ?? $service->mekanik_id,
                 ],
-                $mekanik ? ['estimasi_biaya' => $service->estimasi_biaya, 'mekanik_id' => $service->mekanik_id] : [],
+                $mekanik ? ['estimasi_biaya' => $service->estimasi_biaya, 'mekanik_id' => $service->mekanik_id ?? $user->id] : [],
             ));
         });
 
@@ -238,7 +251,7 @@ class ServiceController extends Controller
                 ])->render(), [$pdfPath], true);
         }
 
-        return back()->with('sukses', 'Status servis diperbarui.');
+        return redirect()->route('admin.services.show', $service)->with('sukses', 'Status servis diperbarui.');
     }
 
     public function tanggapi(Request $request, ServiceBooking $service)
@@ -298,15 +311,17 @@ class ServiceController extends Controller
     {
         $user = $request->user();
         $this->otorisasiServis($user, $service);
-        abort_if($user->hasRole('service-advisor'), 403, 'Rincian pekerjaan hanya dapat ditambah mekanik yang bertugas.');
         abort_if(in_array($service->status, ['Selesai', 'Batal']), 422, 'Servis yang sudah selesai atau batal tidak bisa ditambah.');
+        if ($user->hasRole('mekanik') && $service->mekanik_id === null) {
+            $service->update(['mekanik_id' => $user->id]);
+        }
 
         $data = $request->validate([
             'jenis' => ['required', 'in:Pekerjaan,Sparepart'],
             'sparepart_id' => ['required_if:jenis,Sparepart', 'nullable', 'exists:spareparts,id'],
             'deskripsi' => ['required_unless:jenis,Sparepart', 'nullable', 'string', 'max:255'],
             'qty' => ['required', 'integer', 'min:1'],
-            'harga_satuan' => ['required_unless:jenis,Sparepart', 'nullable', 'integer', 'min:0'],
+            'harga_satuan' => ['nullable', 'integer', 'min:0'],
         ]);
 
         if ($data['jenis'] === 'Sparepart') {
@@ -315,7 +330,7 @@ class ServiceController extends Controller
             $harga = $sp->harga;
         } else {
             $deskripsi = $data['deskripsi'];
-            $harga = $data['harga_satuan'];
+            $harga = (int) ($data['harga_satuan'] ?? 0);
         }
 
         $service->details()->create([
@@ -333,5 +348,16 @@ class ServiceController extends Controller
         }
 
         return back()->with('sukses', 'Detail servis ditambah.');
+    }
+
+    public function destroyDetail(Request $request, ServiceBooking $service, \App\Models\ServiceDetail $detail)
+    {
+        $this->otorisasiServis($request->user(), $service);
+        abort_if($detail->service_booking_id !== $service->id, 404);
+        abort_if(in_array($service->status, ['Selesai', 'Batal']), 422, 'Servis yang sudah selesai atau batal tidak bisa diubah.');
+
+        $detail->delete();
+
+        return redirect()->route('admin.services.show', $service)->with('sukses', 'Rincian servis dihapus.');
     }
 }

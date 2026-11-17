@@ -16,12 +16,20 @@ use Illuminate\Http\Request;
 
 class TestDriveController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $drives = TestDrive::with(['customer', 'branch', 'variant.carModel', 'color'])
-            ->latest()->paginate(15);
+        $status = $request->validate(['status' => ['nullable', 'in:Menunggu,Dikonfirmasi,Hadir,Batal']])['status'] ?? null;
 
-        return view('admin.test-drives.index', compact('drives'));
+        $drives = TestDrive::with(['customer', 'branch', 'variant.carModel', 'color'])
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->latest('jadwal')->paginate(15)->withQueryString();
+
+        // Hitungan per status untuk chip filter.
+        $jumlah = collect(['Menunggu', 'Dikonfirmasi', 'Hadir', 'Batal'])
+            ->mapWithKeys(fn ($s) => [$s => TestDrive::where('status', $s)->count()])
+            ->put('semua', TestDrive::count());
+
+        return view('admin.test-drives.index', compact('drives', 'jumlah', 'status'));
     }
 
     public function create(Request $request)
@@ -43,11 +51,13 @@ class TestDriveController extends Controller
 
     public function store(Request $request)
     {
+        $isTamu = $request->user() === null;
+
         $data = $request->validate([
             'nama' => ['required', 'string', 'max:100'],
-            'nik' => ['required', 'digits:16'],
+            'nik' => $isTamu ? ['nullable', 'digits:16'] : ['required', 'digits:16'],
             'telp' => ['required', 'regex:/^[0-9]{10,15}$/'],
-            'alamat' => ['required', 'string'],
+            'alamat' => $isTamu ? ['nullable', 'string'] : ['required', 'string'],
             'branch_id' => ['required', 'exists:branches,id'],
             'variant_id' => ['required', 'exists:variants,id'],
             'color_id' => ['nullable', 'exists:colors,id'],
@@ -55,10 +65,16 @@ class TestDriveController extends Controller
             'catatan' => ['nullable', 'string'],
         ]);
 
-        $customer = Customer::firstOrCreate(
-            ['nik' => $data['nik']],
-            ['user_id' => $request->user()?->id, 'nama' => $data['nama'], 'telp' => $data['telp'], 'alamat' => $data['alamat']]
-        );
+        // Tamu: identifikasi customer dari nomor WhatsApp, NIK menyusul saat deal.
+        $customer = $isTamu
+            ? Customer::firstOrCreate(
+                ['telp' => $data['telp']],
+                ['user_id' => null, 'nama' => $data['nama']]
+            )
+            : Customer::firstOrCreate(
+                ['nik' => $data['nik']],
+                ['user_id' => $request->user()?->id, 'nama' => $data['nama'], 'telp' => $data['telp'], 'alamat' => $data['alamat']]
+            );
 
         $testDrive = TestDrive::create([
             'customer_id' => $customer->id,
@@ -76,7 +92,7 @@ class TestDriveController extends Controller
             'customer_id' => $customer->id,
             'sumber' => 'Web',
             'status' => 'TestDrive',
-            'kebutuhan_text' => "Test drive {$testDrive->variant->carModel->nama} {$testDrive->variant->nama}{$warna} di {$testDrive->branch->nama}, jadwal {$testDrive->jadwal->format('d M Y H:i')}",
+            'kebutuhan_text' => ($isTamu ? '[Tanpa akun] ' : '') . "Test drive {$testDrive->variant->carModel->nama} {$testDrive->variant->nama}{$warna} di {$testDrive->branch->nama}, jadwal {$testDrive->jadwal->format('d M Y H:i')}",
         ]);
 
         $testDrive->load(['customer', 'branch', 'variant.carModel.brand', 'color']);

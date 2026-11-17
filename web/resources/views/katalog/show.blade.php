@@ -1,37 +1,83 @@
 <x-site-layout judul="{{ $variant->carModel->brand->nama }} {{ $variant->carModel->nama }} {{ $variant->nama }}" deskripsi="Spesifikasi, harga OTR, stok cabang, dan simulasi kredit {{ $variant->nama }} di Ayoto Nippon.">
     <x-site-header />
 
-    <div class="w-full px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-        <a href="{{ route('katalog.index') }}" class="text-sm font-medium text-muted hover:text-ink min-h-[44px] inline-flex items-center gap-2 transition-colors">
-            <span>Kembali ke Katalog</span>
-        </a>
+    @php
+        $unitSpk = $variant->units->where('status', 'Tersedia')->first();
+        $galeri = $variant->units->filter(fn ($u) => $u->foto_utama)->unique('foto_utama')->map(fn ($u) => ['foto' => $u->foto_utama, 'warna' => $u->color_id])->values();
+        $warnaTersedia = $variant->units->where('status', 'Tersedia')->map(fn ($u) => $u->color)->filter()->unique('id')->values();
+        $spek = $variant->spekLengkap();
+        $mulaiOtr = $variant->priceLists->min('otr');
+        $mulaiBooking = $variant->priceLists->map(fn ($p) => $p->branch->booking_fee)->filter()->min();
+        // Tombol WhatsApp pembeli -> sales, pesan terisi otomatis sesuai unit.
+        $waSales = \App\Support\Wa::chat(
+            config('services.wa.sales'),
+            'Halo Ayoto Nippon, saya tertarik dengan ' . $variant->carModel->brand->nama . ' ' . $variant->carModel->nama . ' ' . $variant->nama
+                . ($unitSpk ? ' (VIN ' . $unitSpk->vin . ')' : '')
+                . ($mulaiOtr ? ', harga mulai Rp ' . number_format($mulaiOtr, 0, ',', '.') : '')
+                . '. Masih tersedia? Mohon info lengkapnya.'
+        );
+        $bungaAcuan = $leasings->min('bunga_dasar');
+        $angsuranEstimasi = ($mulaiOtr && $bungaAcuan !== null)
+            ? (int) round((($mulaiOtr * 0.8) + ($mulaiOtr * 0.8 * $bungaAcuan / 100 * 48 / 12)) / 48)
+            : null;
+        $kursi = $variant->spesifikasi['kursi'] ?? null;
+        $tahunRakit = $variant->units->max('tahun_rakit') ?? date('Y');
+        $bodiModel = null;
+        if ($variant->carModel->deskripsi && preg_match('/^(.*)\s+\d+\s+penumpang$/', $variant->carModel->deskripsi, $mBodi)) {
+            $bodiModel = trim($mBodi[1]);
+        }
+        $totalStokTersedia = $stok->sum();
 
-        @php $unitSpk = $variant->units->where('status', 'Tersedia')->first(); @endphp
+        $overviewItems = [
+            ['Tipe Bodi', $bodiModel ?: '-', '<path d="M5 13l1.5-4.5A2 2 0 018.4 7h7.2a2 2 0 011.9 1.5L19 13m-14 0v4a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-4m-14 0h14"/>'],
+            ['Kondisi', 'Unit Baru', '<path d="M9 12l2 2 4-4m5 2a8 8 0 11-16 0 8 8 0 0116 0z"/>'],
+            ['Tempat Duduk', $kursi ? $kursi.' Orang' : ($spek['Dimensi dan kapasitas']['Kapasitas kursi'] ?? '-'), '<path d="M7 13V6a2 2 0 012-2h6a2 2 0 012 2v7m-10 0h10m-10 0l-1 5h12l-1-5"/>'],
+            ['Bagasi', $spek['Dimensi dan kapasitas']['Bagasi'] ?? '-', '<rect x="6" y="7" width="12" height="13" rx="2"/><path d="M10 7V4h4v3"/>'],
+            ['Bahan Bakar', $spek['Mesin dan performa']['Bahan bakar'] ?? $variant->bbm, '<path d="M5 20V5a2 2 0 012-2h6a2 2 0 012 2v15M4 20h12M8 7h4v4H8V7zm7 3h1.5a1.5 1.5 0 011.5 1.5v5a1.5 1.5 0 003 0V9.5l-2-2"/>'],
+            ['Tenaga Maks.', $spek['Mesin dan performa']['Tenaga maksimum'] ?? '-', '<circle cx="12" cy="12" r="8"/><path d="M12 12l3-3"/>'],
+            ['Transmisi', $spek['Mesin dan performa']['Transmisi'] ?? $variant->transmisi, '<circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><path d="M6 7.5v9M12 7.5v9M18 7.5V12H6"/>'],
+            ['Penggerak', $spek['Mesin dan performa']['Penggerak'] ?? '-', '<circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M7 15V9m10 6V9M7 12h10"/>'],
+            ['Tahun Rakit', (string) $tahunRakit, '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4m8-4v4M4 10h16"/>'],
+            ['Pilihan Warna', $warnaTersedia->isNotEmpty() ? $warnaTersedia->count().' Warna' : 'Sesuai Cabang', '<path d="M12 3a9 9 0 100 18 2 2 0 002-2v-1a2 2 0 012-2h1a4 4 0 004-4 9 9 0 00-9-9z"/>'],
+            ['Ketersediaan', $totalStokTersedia > 0 ? $totalStokTersedia.' Unit Siap Kirim' : 'Inden / Dipesan', '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9.5 12l1.8 1.8L15 10"/>'],
+            ['Keselamatan', $spek['Kaki-kaki dan keselamatan']['Airbag'] ?? '-', '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>'],
+        ];
+    @endphp
 
-        <!-- Top Gallery & Core Info -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            <!-- Left: Gallery & Colors -->
-            <div class="lg:col-span-6 space-y-4">
-                @php
-                    $galeri = $variant->units->filter(fn ($u) => $u->foto_utama)->unique('foto_utama')->map(fn ($u) => ['foto' => $u->foto_utama, 'warna' => $u->color_id])->values();
-                    $warnaTersedia = $variant->units->where('status', 'Tersedia')->map(fn ($u) => $u->color)->filter()->unique('id')->values();
-                @endphp
-
-                <div class="bg-surface border border-line rounded-3xl overflow-hidden shadow-2xl shadow-black/5">
-                    @if ($galeri->isNotEmpty())
-                        <img id="galeri-utama" src="{{ asset($galeri[0]['foto']) }}" alt="{{ $variant->carModel->brand->nama }} {{ $variant->carModel->nama }} {{ $variant->nama }}" fetchpriority="high" class="w-full aspect-[16/10] lg:max-h-[460px] 2xl:max-h-[540px] object-cover transition-all duration-300">
-                        @if ($galeri->count() > 1)
-                            <div class="p-3 bg-surface border-t border-line grid grid-cols-4 sm:grid-cols-6 gap-2">
-                                @foreach ($galeri->take(8) as $i => $item)
-                                    <button type="button" data-galeri="{{ asset($item['foto']) }}" data-foto-warna="{{ $item['warna'] }}" aria-label="Lihat foto {{ $i + 1 }}" 
-                                        class="rounded-xl overflow-hidden border-2 border-transparent hover:border-accent/50 focus:border-accent transition-all min-h-[44px] min-w-[44px] aspect-video bg-surface">
-                                        <img src="{{ asset($item['foto']) }}" alt="" loading="lazy" class="w-full h-full object-cover">
-                                    </button>
-                                @endforeach
-                            </div>
+    <div class="max-w-[1356px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10">
+        <!-- Detail Layout: Left Gallery + Overview + Features | Right Sticky Price Sidebar -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+            <!-- Left Top: Photo Gallery + Color Swatches -->
+            <div class="order-1 lg:order-none lg:col-span-8 lg:col-start-1 lg:row-start-1 space-y-6">
+                <!-- Photo Gallery -->
+                <div class="space-y-3">
+                    <div class="relative bg-surface border border-line rounded-3xl overflow-hidden shadow-xl shadow-black/5">
+                        @if ($galeri->isNotEmpty())
+                            <img id="galeri-utama" src="{{ asset($galeri[0]['foto']) }}" alt="{{ $variant->carModel->brand->nama }} {{ $variant->carModel->nama }} {{ $variant->nama }}" fetchpriority="high" class="w-full aspect-[16/10] object-cover transition-all duration-300">
+                            @if ($galeri->count() > 1)
+                                <button type="button" id="galeri-prev" aria-label="Foto sebelumnya"
+                                    class="absolute left-3.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/45 hover:bg-black/70 text-white backdrop-blur-md flex items-center justify-center transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                                </button>
+                                <button type="button" id="galeri-next" aria-label="Foto berikutnya"
+                                    class="absolute right-3.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/45 hover:bg-black/70 text-white backdrop-blur-md flex items-center justify-center transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                </button>
+                            @endif
+                        @else
+                            <div class="w-full aspect-[16/10] bg-surface flex items-center justify-center text-sm text-muted">Foto menyusul</div>
                         @endif
-                    @else
-                        <div class="w-full aspect-[16/10] lg:max-h-[460px] 2xl:max-h-[540px] bg-surface flex items-center justify-center text-sm text-muted">Foto menyusul</div>
+                    </div>
+
+                    @if ($galeri->count() > 1)
+                        <div class="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
+                            @foreach ($galeri->take(6) as $i => $item)
+                                <button type="button" data-galeri="{{ asset($item['foto']) }}" data-foto-warna="{{ $item['warna'] }}" aria-label="Lihat foto {{ $i + 1 }}"
+                                    class="rounded-xl overflow-hidden border-2 {{ $i === 0 ? 'border-accent' : 'border-line' }} hover:border-accent/60 focus:border-accent transition-all min-h-[44px] aspect-video bg-surface">
+                                    <img src="{{ asset($item['foto']) }}" alt="" loading="lazy" class="w-full h-full object-cover">
+                                </button>
+                            @endforeach
+                        </div>
                     @endif
                 </div>
 
@@ -44,7 +90,7 @@
                         </div>
                         <div class="flex flex-wrap gap-2.5">
                             @foreach ($warnaTersedia as $warna)
-                                <button type="button" data-warna="{{ $warna->id }}" data-nama="{{ $warna->nama }}" aria-pressed="false" title="Pilih warna {{ $warna->nama }}" 
+                                <button type="button" data-warna="{{ $warna->id }}" data-nama="{{ $warna->nama }}" aria-pressed="false" title="Pilih warna {{ $warna->nama }}"
                                     class="flex flex-col items-center gap-1.5 p-2 rounded-xl border border-line hover:border-accent bg-surface transition-all min-w-[64px] min-h-[44px]">
                                     <span class="swatch block w-8 h-8 rounded-full border border-line shadow-inner" style="background-color: {{ $warna->kode_hex }}"></span>
                                     <span class="text-[10px] text-muted font-medium truncate max-w-[64px]">{{ $warna->nama }}</span>
@@ -56,87 +102,62 @@
                 @endif
             </div>
 
-            <!-- Right: Specs & Action Box -->
-            <div class="lg:col-span-6 space-y-6">
-                @php
-                    $spek = $variant->spekLengkap();
-                    $mulaiOtr = $variant->priceLists->min('otr');
-                    $mulaiBooking = $variant->priceLists->map(fn ($p) => $p->branch->booking_fee)->filter()->min();
-                    $kursi = $variant->spesifikasi['kursi'] ?? null;
-                @endphp
-
-                <div>
-                    <p class="text-xs font-semibold tracking-wider text-accent uppercase">{{ $variant->carModel->brand->nama }} {{ $variant->carModel->nama }}</p>
-                    <h1 class="mt-1 text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">{{ $variant->nama }}</h1>
-
-                    <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                        <span class="px-3 py-1 bg-surface border border-line rounded-lg text-ink font-medium">{{ $variant->transmisi }}</span>
-                        <span class="px-3 py-1 bg-surface border border-line rounded-lg text-ink font-medium">{{ $variant->bbm }}</span>
-                        @if ($kursi)
-                            <span class="px-3 py-1 bg-surface border border-line rounded-lg text-ink font-medium">{{ $kursi }} Kursi</span>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Price Box -->
-                <div class="p-6 bg-surface border border-line rounded-3xl shadow-xl">
-                    <p class="text-xs text-muted font-medium uppercase tracking-wider">Harga OTR Mulai</p>
-                    <p class="mt-1 text-3xl sm:text-4xl font-black text-ink tabular-nums tracking-tight">
-                        {{ $mulaiOtr ? 'Rp '.number_format($mulaiOtr, 0, ',', '.') : 'Mengikuti Cabang' }}
-                    </p>
-                    @if ($mulaiBooking)
-                        <div class="mt-3 pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
-                            <span>Tanda Jadi (Booking Fee):</span>
-                            <strong class="text-accent font-bold tabular-nums">Rp {{ number_format($mulaiBooking, 0, ',', '.') }}</strong>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Main Desktop CTAs -->
-                <div class="hidden lg:grid grid-cols-3 gap-2.5">
-                    @auth
-                        <a data-cta-spk href="{{ $unitSpk ? route('spk.create', ['unit_id' => $unitSpk->id]) : route('spk.create') }}" 
-                           class="col-span-3 py-3.5 px-6 text-center font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center active:scale-[0.99]">
-                            Ajukan Pemesanan SPK
-                        </a>
-                    @else
-                        <a href="{{ route('register') }}" 
-                           class="col-span-3 py-3.5 px-6 text-center font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center active:scale-[0.99]">
-                            Daftar untuk Ajukan SPK
-                        </a>
-                    @endauth
-
-                    <button type="button" data-simulasi-toggle aria-expanded="false" aria-controls="simulasi" 
-                        class="col-span-2 py-3 px-4 text-center font-semibold text-xs sm:text-sm text-ink bg-surface border border-line hover:border-accent hover:text-ink rounded-xl transition-all min-h-[44px]">
-                        Kalkulator Simulasi
-                    </button>
-                    <a data-cta-testdrive href="{{ route('test-drive.create', ['variant_id' => $variant->id]) }}" 
-                        class="py-3 px-4 text-center font-semibold text-xs sm:text-sm text-ink bg-surface border border-line hover:border-accent hover:text-ink rounded-xl transition-all min-h-[44px] flex items-center justify-center">
-                        Test Drive
-                    </a>
-                </div>
-
-                <!-- Quick Technical Specs -->
-                <div class="p-6 bg-surface border border-line rounded-3xl">
-                    <h2 class="text-xs font-semibold uppercase tracking-wider text-muted">Ringkasan Performa</h2>
-                    <div class="mt-4 grid grid-cols-3 gap-3 text-center">
-                        @foreach ([
-                            ['Tenaga', $spek['Mesin dan performa']['Tenaga maksimum'] ?? '-'],
-                            ['Torsi', $spek['Mesin dan performa']['Torsi maksimum'] ?? '-'],
-                            ['Ground Clearance', $spek['Dimensi dan kapasitas']['Ground clearance'] ?? '-']
-                        ] as [$label, $nilai])
-                            <div class="bg-surface border border-line rounded-2xl p-3">
-                                <p class="text-[10px] uppercase tracking-wider text-muted">{{ $label }}</p>
-                                <p class="mt-1 text-xs sm:text-sm font-bold text-ink">{{ $nilai }}</p>
+            <!-- Left Main Content: Ringkasan, Deskripsi, Fitur, Simulasi, Stok Cabang -->
+            <div class="order-3 lg:order-none lg:col-span-8 lg:col-start-1 lg:row-start-2 space-y-10">
+                <!-- Ringkasan Kendaraan (Boxcars Car Overview) -->
+                <section class="space-y-4">
+                    <h2 class="text-2xl font-bold text-ink tracking-tight">Ringkasan Kendaraan<span class="sr-only"> - Ringkasan Performa</span></h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10">
+                        @foreach ($overviewItems as [$label, $nilai, $ikon])
+                            <div class="flex items-center justify-between gap-4 py-3.5 border-b border-line text-sm">
+                                <span class="flex items-center gap-2.5 text-muted">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $ikon !!}</svg>
+                                    <span>{{ $label }}</span>
+                                </span>
+                                <strong class="font-semibold text-ink text-right">{{ $nilai }}</strong>
                             </div>
                         @endforeach
                     </div>
-                </div>
-            </div>
-        </div>
+                </section>
 
-        <!-- Interactive Loan Calculator (Collapsible / Toggleable) -->
-        <section id="simulasi" aria-labelledby="simulasi-judul" class="border border-line bg-surface rounded-3xl p-6 sm:p-8 shadow-2xl" hidden>
+                <!-- Deskripsi -->
+                <section class="pt-6 border-t border-line space-y-3">
+                    <h2 class="text-2xl font-bold text-ink tracking-tight">Deskripsi</h2>
+                    <p class="text-sm sm:text-base text-muted leading-relaxed">
+                        {{ $variant->carModel->brand->nama }} {{ $variant->carModel->nama }} {{ $variant->nama }} hadir sebagai unit baru resmi dengan transmisi {{ $spek['Mesin dan performa']['Transmisi'] ?? $variant->transmisi }} dan pilihan bahan bakar {{ strtolower($spek['Mesin dan performa']['Bahan bakar'] ?? $variant->bbm) }}.
+                        @if ($variant->carModel->deskripsi)
+                            Konfigurasi {{ strtolower($variant->carModel->deskripsi) }} ini dipersiapkan dengan standar pengecekan dealer resmi Ayoto Nippon dan catatan nomor rangka (VIN) yang transparan.
+                        @endif
+                        @if ($mulaiOtr)
+                            Tersedia mulai harga OTR Rp {{ number_format($mulaiOtr, 0, ',', '.') }} dengan opsi pembiayaan leasing mitra resmi dan layanan serah terima langsung di cabang Jakarta maupun Bandung.
+                        @endif
+                    </p>
+                </section>
+
+                <!-- Fitur & Spesifikasi Lengkap (Boxcars Checkmark Columns) -->
+                <section class="pt-6 border-t border-line space-y-6">
+                    <h2 class="text-2xl font-bold text-ink tracking-tight">Fitur &amp; Spesifikasi</h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        @foreach ($spek as $grup => $baris)
+                            <div>
+                                <h3 class="text-sm font-bold text-ink mb-4">{{ $grup }}</h3>
+                                <ul class="space-y-3">
+                                    @foreach ($baris as $label => $nilai)
+                                        <li class="flex items-start gap-2.5 text-xs sm:text-sm">
+                                            <svg class="w-4 h-4 text-accent shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                            <span class="text-muted"><strong class="font-medium text-ink">{{ $label }}:</strong> {{ $nilai }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endforeach
+                    </div>
+                    <p class="text-xs text-muted">Keterangan spesifikasi bersumber dari brosur pabrikan resmi. Konsultasikan dengan staf dealer kami untuk detail pembaruan teranyar.</p>
+                </section>
+
+                <!-- Interactive Loan Calculator (Collapsible / Toggleable) -->
+                <section id="simulasi" aria-labelledby="simulasi-judul" class="border border-line bg-surface rounded-3xl p-6 sm:p-8 shadow-xl" hidden>
             <div class="pb-6 border-b border-line">
                 <p class="text-xs font-semibold tracking-wider text-accent uppercase">Fasilitas Finansial</p>
                 <h2 id="simulasi-judul" tabindex="-1" class="mt-1 text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">Kalkulator Simulasi Kredit</h2>
@@ -286,39 +307,14 @@
             @endif
         </section>
 
-        <!-- Full Technical Specifications -->
-        <section class="space-y-6">
-            <div class="pb-4 border-b border-line">
-                <p class="text-xs font-semibold tracking-wider text-accent uppercase">Spesifikasi Lengkap</p>
-                <h2 class="mt-1 text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">Data Teknis Resmi {{ $variant->carModel->nama }} {{ $variant->nama }}</h2>
-            </div>
-
-            <div class="reveal grid grid-cols-1 md:grid-cols-3 gap-6">
-                @foreach ($variant->spekLengkap() as $grup => $baris)
-                    <div class="bg-surface border border-line rounded-3xl p-6">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-accent pb-3 border-b border-line">{{ $grup }}</h3>
-                        <dl class="mt-4 space-y-3">
-                            @foreach ($baris as $label => $nilai)
-                                <div class="flex justify-between items-start gap-4 text-xs sm:text-sm">
-                                    <dt class="text-muted">{{ $label }}</dt>
-                                    <dd class="font-semibold text-right text-ink">{{ $nilai }}</dd>
-                                </div>
-                            @endforeach
-                        </dl>
-                    </div>
-                @endforeach
-            </div>
-            <p class="text-xs text-muted">Keterangan spesifikasi bersumber dari brosur pabrikan resmi. Konsultasikan dengan staf dealer kami untuk detail pembaruan teranyar.</p>
-        </section>
-
         <!-- Branch Stock & Allocation Table -->
-        <section class="space-y-6">
+        <section class="space-y-6 pt-6 border-t border-line">
             <div class="pb-4 border-b border-line">
                 <p class="text-xs font-semibold tracking-wider text-accent uppercase">Alokasi Dealer</p>
-                <h2 class="mt-1 text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">Harga OTR & Ketersediaan Stok Cabang</h2>
+                <h2 class="mt-1 text-2xl font-bold text-ink tracking-tight">Harga OTR &amp; Ketersediaan Stok Cabang</h2>
             </div>
 
-            <div class="reveal overflow-x-auto bg-surface border border-line rounded-3xl shadow-xl">
+            <div class="overflow-x-auto bg-surface border border-line rounded-3xl shadow-xl">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-line bg-surface text-muted text-xs uppercase tracking-wider">
@@ -340,9 +336,15 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     @if (($stok[$price->branch_id] ?? 0) > 0)
-                                        <a href="{{ route('spk.create') }}" class="inline-flex items-center text-xs font-semibold text-accent hover:text-accent min-h-[44px]">
-                                            Ajukan SPK &rarr;
-                                        </a>
+                                        @auth
+                                            <a href="{{ route('spk.create') }}" class="inline-flex items-center text-xs font-semibold text-accent hover:text-accent min-h-[44px]">
+                                                Ajukan SPK &rarr;
+                                            </a>
+                                        @else
+                                            <a href="{{ route('spk.guest', ['variant_id' => $variant->id, 'branch_id' => $price->branch_id]) }}" class="inline-flex items-center text-xs font-semibold text-accent hover:text-accent min-h-[44px]">
+                                                Ajukan SPK &rarr;
+                                            </a>
+                                        @endauth
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
@@ -353,7 +355,214 @@
                 </table>
             </div>
         </section>
+            </div>
+
+            <!-- Right Sticky Sidebar (Boxcars Sticky Price + Showroom Card) -->
+            <aside class="order-2 lg:order-none lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 space-y-5">
+                <div class="bg-surface border border-line rounded-3xl p-6 shadow-xl shadow-black/5 space-y-5">
+                    <div>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-surface-2 border border-line text-ink uppercase tracking-wider">
+                            {{ $totalStokTersedia > 0 ? 'Unit Baru Tersedia' : 'Pemesanan Inden' }}
+                        </span>
+                        <h1 class="mt-3 text-2xl sm:text-3xl font-extrabold text-ink leading-tight tracking-tight">
+                            {{ $variant->carModel->brand->nama }} {{ $variant->carModel->nama }} {{ $variant->nama }}
+                        </h1>
+                        <p class="mt-1.5 text-sm text-muted">
+                            {{ $tahunRakit }} - {{ $spek['Mesin dan performa']['Transmisi'] ?? $variant->transmisi }} - {{ $spek['Mesin dan performa']['Bahan bakar'] ?? $variant->bbm }}
+                        </p>
+                    </div>
+
+                    @if (($varianModel ?? collect())->count() > 1)
+                        <div class="pt-3 border-t border-line space-y-2">
+                            <span class="block text-xs font-semibold uppercase tracking-wider text-muted">Pilih Varian ({{ $varianModel->count() }})</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                @foreach ($varianModel as $vItem)
+                                    @php $aktifVarian = $vItem->id === $variant->id; @endphp
+                                    <a href="{{ route('katalog.show', $vItem->slug) }}"
+                                       class="px-3 py-2 rounded-xl border text-xs transition-all {{ $aktifVarian ? 'border-accent bg-accent-strong/10 text-ink font-bold' : 'border-line bg-surface hover:border-accent text-muted' }}">
+                                        <span class="block truncate text-ink font-semibold">{{ $vItem->nama }}</span>
+                                        <span class="block text-[10px] text-muted">{{ $vItem->transmisi }} - {{ $vItem->bbm }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Quick 3-metric row -->
+                    <div class="py-3.5 border-y border-line grid grid-cols-3 gap-2 text-xs text-muted">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 13V6a2 2 0 012-2h6a2 2 0 012 2v7m-10 0h10m-10 0l-1 5h12l-1-5"/></svg>
+                            <span class="truncate">{{ $kursi ? $kursi.' Kursi' : '-' }}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 20V5a2 2 0 012-2h6a2 2 0 012 2v15M4 20h12"/></svg>
+                            <span class="truncate">{{ $variant->bbm }}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="6" cy="18" r="1.5"/><path stroke-linecap="round" d="M6 7.5v9M12 7.5V12H6"/></svg>
+                            <span class="truncate">{{ $variant->transmisi }}</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-muted font-medium uppercase tracking-wider">Harga OTR Mulai</p>
+                        <p class="mt-1 text-3xl font-black text-ink tabular-nums tracking-tight">
+                            {{ $mulaiOtr ? 'Rp '.number_format($mulaiOtr, 0, ',', '.') : 'Mengikuti Cabang' }}
+                        </p>
+                        @if ($angsuranEstimasi)
+                            <p class="mt-1 text-xs text-muted tabular-nums">
+                                Estimasi mulai Rp {{ number_format($angsuranEstimasi, 0, ',', '.') }}/bln - DP 20%, 48 bln
+                            </p>
+                        @endif
+                        @if ($mulaiBooking)
+                            <div class="mt-3 pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
+                                <span>Tanda Jadi (Booking Fee)</span>
+                                <strong class="text-accent font-bold tabular-nums">Rp {{ number_format($mulaiBooking, 0, ',', '.') }}</strong>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="hidden lg:flex flex-col gap-2.5 pt-1">
+                        @auth
+                            <a data-cta-spk href="{{ $unitSpk ? route('spk.create', ['unit_id' => $unitSpk->id]) : route('spk.create') }}"
+                               class="w-full py-3.5 px-5 text-center font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center">
+                                Ajukan Pemesanan SPK ↗
+                            </a>
+                        @else
+                            <a data-cta-spk href="{{ route('spk.guest', array_filter(['unit_id' => $unitSpk?->id, 'variant_id' => $variant->id])) }}"
+                               class="w-full py-3.5 px-5 text-center font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center">
+                                Ajukan SPK Tanpa Akun ↗
+                            </a>
+                        @endauth
+
+                        <a data-cta-testdrive href="{{ route('test-drive.create', ['variant_id' => $variant->id]) }}"
+                            class="w-full py-3 px-5 text-center font-semibold text-sm text-ink bg-surface border border-line hover:border-accent rounded-xl transition-all min-h-[44px] flex items-center justify-center">
+                            Jadwalkan Test Drive ↗
+                        </a>
+
+                        <button type="button" data-simulasi-toggle aria-expanded="false" aria-controls="simulasi"
+                            class="w-full py-3 px-5 text-center font-semibold text-sm text-ink bg-surface-2 hover:border-accent border border-line rounded-xl transition-all min-h-[44px]">
+                            Kalkulator Simulasi Kredit
+                        </button>
+                    </div>
+                </div>
+
+                @if ($variant->priceLists->isNotEmpty())
+                    <div class="bg-surface border border-line rounded-3xl p-6 space-y-4">
+                        <h2 class="text-base font-bold text-ink">Kunjungi Cabang Resmi</h2>
+                        <div class="space-y-3 text-xs sm:text-sm">
+                            @foreach ($variant->priceLists as $price)
+                                <div class="pb-3 border-b border-line last:border-b-0 last:pb-0">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <strong class="text-ink">{{ $price->branch->nama }}</strong>
+                                        <span class="text-xs font-bold text-ink tabular-nums">Rp {{ number_format($price->otr, 0, ',', '.') }}</span>
+                                    </div>
+                                    <p class="mt-0.5 text-xs text-muted">
+                                        {{ ($stok[$price->branch_id] ?? 0) > 0 ? ($stok[$price->branch_id]).' unit siap kirim' : 'Stok inden cabang' }}
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                        <a href="{{ route('cabang.index') }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold text-ink bg-surface border border-line hover:border-accent rounded-xl transition-colors min-h-[44px] flex items-center justify-center">
+                            Lihat Jaringan Cabang ↗
+                        </a>
+                    </div>
+                @endif
+            </aside>
+        </div>
+
+        @if (($produkSerupa ?? collect())->isNotEmpty())
+            <!-- Produk Serupa (Highlight Mobil Setipe) -->
+            <section class="pt-10 border-t border-line space-y-6">
+                <div class="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-semibold tracking-wider text-accent uppercase">
+                            {{ $bodiModel ? 'Kategori '.$bodiModel : 'Rekomendasi Dealer' }}
+                        </p>
+                        <h2 class="mt-1 text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">Jelajahi kendaraan serupa</h2>
+                    </div>
+                    <a href="{{ route('katalog.index', $bodiModel ? ['body' => $bodiModel] : []) }}" class="text-sm font-semibold text-ink hover:text-accent transition-colors">
+                        Lihat Semua {{ $bodiModel ?: 'Katalog' }} ↗
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    @foreach ($produkSerupa as $serupa)
+                        @php
+                            $vUtamaSerupa = $serupa->variants->sortBy(fn ($v) => $v->priceLists->min('otr') ?? PHP_INT_MAX)->first() ?? $serupa->variants->first();
+                            $unitSiapSerupa = $serupa->variants->flatMap->units->where('status', 'Tersedia');
+                            $fotoSerupa = $unitSiapSerupa->first()?->foto_utama ?? $serupa->variants->flatMap->units->first()?->foto_utama;
+                            $hargaSerupa = $serupa->variants->flatMap->priceLists->min('otr');
+                            $transmisiSerupa = $serupa->variants->pluck('transmisi')->unique()->filter()->join(' / ') ?: '-';
+                            $bbmSerupa = $serupa->variants->pluck('bbm')->unique()->filter()->join(' / ') ?: '-';
+                            $bodiSerupa = null;
+                            $kursiSerupa = null;
+                            if ($serupa->deskripsi && preg_match('/^(.*)\s+(\d+)\s+penumpang$/', $serupa->deskripsi, $mSerupa)) {
+                                $bodiSerupa = trim($mSerupa[1]);
+                                $kursiSerupa = $mSerupa[2].' Kursi';
+                            }
+                            $tautanSerupa = $vUtamaSerupa ? route('katalog.show', $vUtamaSerupa->slug) : route('katalog.model', [$serupa->brand->slug, $serupa->slug]);
+                        @endphp
+                        <a href="{{ $tautanSerupa }}"
+                           class="group bg-surface-2/80 dark:bg-surface border border-line rounded-3xl p-5 flex flex-col justify-between transition-all duration-300 hover:border-accent hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
+                            <div>
+                                <div class="relative rounded-2xl overflow-hidden bg-surface aspect-[16/10]">
+                                    @if ($fotoSerupa)
+                                        <img src="{{ asset($fotoSerupa) }}" alt="{{ $serupa->brand->nama }} {{ $serupa->nama }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                                    @else
+                                        <div class="h-full w-full flex items-center justify-center text-sm text-muted">Foto menyusul</div>
+                                    @endif
+                                    <div class="absolute top-3 left-3 rounded-full bg-surface/90 backdrop-blur-sm shadow-sm">
+                                        <x-status-badge status="{{ $unitSiapSerupa->isNotEmpty() ? 'Tersedia' : 'Dipesan' }}" />
+                                    </div>
+                                </div>
+
+                                <div class="pt-5">
+                                    <p class="text-[11px] font-semibold uppercase tracking-wider text-muted">{{ $serupa->brand->nama }}</p>
+                                    <h3 class="mt-0.5 text-xl font-extrabold text-ink group-hover:text-accent transition-colors tracking-tight">
+                                        {{ $serupa->brand->nama }} {{ $serupa->nama }}
+                                    </h3>
+
+                                    <div class="mt-3 flex flex-wrap gap-1.5 text-xs">
+                                        @if ($bodiSerupa)
+                                            <span class="px-2.5 py-1 rounded-lg bg-surface border border-line text-ink font-semibold">{{ $bodiSerupa }}</span>
+                                        @endif
+                                        @if ($kursiSerupa)
+                                            <span class="px-2.5 py-1 rounded-lg bg-surface border border-line text-muted">{{ $kursiSerupa }}</span>
+                                        @endif
+                                        <span class="px-2.5 py-1 rounded-lg bg-surface border border-line text-muted">{{ $transmisiSerupa }}</span>
+                                        <span class="px-2.5 py-1 rounded-lg bg-surface border border-line text-muted">{{ $bbmSerupa }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 pt-4 border-t border-line flex items-center justify-between gap-3">
+                                <div>
+                                    <span class="block text-[10px] uppercase tracking-wider text-muted">Harga OTR Mulai</span>
+                                    <strong class="text-base font-extrabold text-ink tabular-nums">
+                                        {{ $hargaSerupa ? 'Rp '.number_format($hargaSerupa, 0, ',', '.') : 'Hubungi Cabang' }}
+                                    </strong>
+                                </div>
+                                <span class="text-xs font-bold text-accent group-hover:translate-x-0.5 transition-transform">
+                                    Lihat Detail ↗
+                                </span>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+        @endif
     </div>
+
+    <!-- Tombol WhatsApp mengapung: pembeli -> sales, pesan terisi otomatis -->
+    <a href="{{ $waSales }}" target="_blank" rel="noopener"
+        aria-label="Chat sales via WhatsApp"
+        class="fixed right-4 bottom-[88px] lg:bottom-6 z-40 flex items-center justify-center w-14 h-14 lg:w-auto lg:px-4 lg:h-12 rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 hover:scale-105 active:scale-95 transition-transform">
+        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.297-.497.099-.198.05-.371-.05-.52-.099-.148-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"/>
+        </svg>
+        <span class="hidden lg:inline text-sm font-bold whitespace-nowrap ml-2">Chat Sales</span>
+    </a>
 
     <!-- Mobile Bottom Fixed Bar -->
     <div class="lg:hidden sticky bottom-0 bg-surface/95 backdrop-blur-xl border-t border-line p-3 flex gap-2 z-30">
@@ -363,9 +572,9 @@
                 Ajukan SPK
             </a>
         @else
-            <a href="{{ route('register') }}" 
+            <a data-cta-spk href="{{ route('spk.guest', array_filter(['unit_id' => $unitSpk?->id, 'variant_id' => $variant->id])) }}"
                class="flex-1 px-4 py-3 text-center text-sm font-bold text-white bg-accent-strong rounded-xl min-h-[44px] flex items-center justify-center shadow-lg shadow-accent/20">
-                Daftar SPK
+                Ajukan SPK
             </a>
         @endauth
         <button type="button" data-simulasi-toggle aria-expanded="false" aria-controls="simulasi" 
@@ -398,15 +607,29 @@
             toggles.forEach((t) => t.addEventListener('click', () => buka(panel.hidden)));
             const utama = document.getElementById('galeri-utama');
             const thumbBtns = Array.from(document.querySelectorAll('[data-galeri]'));
-            function fotoWarna(idWarna) {
-                const btn = thumbBtns.find((b) => String(b.dataset.fotoWarna) === String(idWarna));
-                return btn ? btn.dataset.galeri : null;
-            }
-            document.querySelectorAll('[data-galeri]').forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    if (utama) utama.src = btn.dataset.galeri;
+            const prevBtn = document.getElementById('galeri-prev');
+            const nextBtn = document.getElementById('galeri-next');
+            let galeriIndex = 0;
+
+            function tampilkanFoto(idx) {
+                if (!utama || !thumbBtns.length) return;
+                galeriIndex = (idx + thumbBtns.length) % thumbBtns.length;
+                utama.src = thumbBtns[galeriIndex].dataset.galeri;
+                thumbBtns.forEach((b, i) => {
+                    b.classList.toggle('border-accent', i === galeriIndex);
+                    b.classList.toggle('border-line', i !== galeriIndex);
                 });
+            }
+
+            function fotoWarna(idWarna) {
+                const idx = thumbBtns.findIndex((b) => String(b.dataset.fotoWarna) === String(idWarna));
+                return idx >= 0 ? idx : -1;
+            }
+            thumbBtns.forEach((btn, i) => {
+                btn.addEventListener('click', () => tampilkanFoto(i));
             });
+            if (prevBtn) prevBtn.addEventListener('click', () => tampilkanFoto(galeriIndex - 1));
+            if (nextBtn) nextBtn.addEventListener('click', () => tampilkanFoto(galeriIndex + 1));
             const spkBase = "{{ route('spk.create') }}";
             const tdBase = "{{ route('test-drive.create') }}";
             const varianId = "{{ $variant->id }}";
@@ -455,10 +678,10 @@
                 });
                 if (utama && thumbBtns.length) {
                     if (warna) {
-                        const cocok = fotoWarna(warna);
-                        if (cocok) utama.src = cocok;
+                        const cocokIdx = fotoWarna(warna);
+                        if (cocokIdx >= 0) tampilkanFoto(cocokIdx);
                     } else {
-                        utama.src = thumbBtns[0].dataset.galeri;
+                        tampilkanFoto(0);
                     }
                 }
                 thumbBtns.forEach((b) => {

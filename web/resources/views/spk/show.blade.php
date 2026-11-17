@@ -1,4 +1,4 @@
-<x-site-layout judul="Lacak {{ $order->no_spk }}" robots="noindex, nofollow">
+<x-site-layout judul="Detail {{ $order->no_spk }}" robots="noindex, nofollow">
     <x-site-header />
 
     <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12 space-y-8">
@@ -13,11 +13,11 @@
             <div>
                 <p class="text-xs font-semibold tracking-wider text-accent uppercase">Status Surat Pesanan Kendaraan</p>
                 <h1 class="mt-1 text-2xl sm:text-3xl font-extrabold text-ink tracking-tight flex items-center gap-2">
-                    Lacak SPK <span class="font-mono text-accent">{{ $order->no_spk }}</span>
+                    Detail SPK <span class="font-mono text-accent">{{ $order->no_spk }}</span>
                 </h1>
             </div>
-            <a href="{{ route('lacak.form') }}" class="text-xs sm:text-sm font-medium text-muted hover:text-ink min-h-[44px] inline-flex items-center gap-1.5 transition-colors">
-                <span>Lacak Nomor Lain</span>
+            <a href="{{ route('pesanan.index') }}" class="text-xs sm:text-sm font-medium text-muted hover:text-ink min-h-[44px] inline-flex items-center gap-1.5 transition-colors">
+                <span>Kembali ke Pesanan Saya</span>
             </a>
         </div>
 
@@ -98,7 +98,7 @@
         @php
             $langkah = [
                 ['label' => 'Pesanan dibuat', 'waktu' => $order->created_at, 'catatan' => 'SPK diterbitkan untuk unit pilihan Anda.'],
-                ['label' => 'Pembayaran diverifikasi', 'waktu' => $order->verified_at, 'catatan' => 'Bukti transfer diperiksa admin cabang.'],
+                ['label' => 'Pembayaran diverifikasi', 'waktu' => $order->verified_at, 'catatan' => $order->metode === 'Cash' ? 'Pembayaran tunai di cabang diperiksa admin.' : 'Bukti transfer diperiksa admin cabang.'],
                 ['label' => 'STNK dan BPKB selesai', 'waktu' => $order->stnk_selesai_at, 'catatan' => 'Dokumen kendaraan selesai diurus.'],
                 ['label' => 'Unit siap serah terima', 'waktu' => $order->jadwal_serah_at, 'catatan' => 'Jadwal pengambilan unit di cabang.'],
                 ['label' => 'Unit diserahkan', 'waktu' => $order->bast_at, 'catatan' => 'Berita acara serah terima ditandatangani.'],
@@ -113,10 +113,10 @@
             $dihentikan = in_array($order->status, ['Batal', 'Expired', 'Ditolak'], true);
         @endphp
 
-        <div class="grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-5">
-            <section class="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-xl" aria-labelledby="tahapan-pesanan">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <section class="lg:col-span-5 bg-surface border border-line rounded-3xl p-6 shadow-xl" aria-labelledby="tahapan-pesanan">
                 <h2 id="tahapan-pesanan" class="text-xs font-semibold uppercase tracking-wider text-muted">Tahapan Proses Pemesanan</h2>
-                <ol class="mt-4">
+                <ol class="mt-5">
                     @foreach ($langkah as $i => $l)
                         @php
                             $selesai = $l['waktu'] !== null;
@@ -129,7 +129,7 @@
                                     <span class="w-px flex-1 my-1 {{ $selesai ? 'bg-accent-strong/40' : 'bg-line' }}"></span>
                                 @endunless
                             </div>
-                            <div class="pb-4 min-w-0">
+                            <div class="pb-5 last:pb-0 min-w-0">
                                 <p class="text-sm font-semibold {{ $selesai ? 'text-ink' : ($aktif ? 'text-accent' : 'text-muted') }}">{{ $l['label'] }}</p>
                                 @if ($l['waktu'])
                                     <p class="text-xs text-muted tabular-nums mt-0.5">{{ $l['waktu']->format('d M Y, H:i') }} WIB</p>
@@ -142,133 +142,166 @@
                     @endforeach
                 </ol>
                 @if ($dihentikan)
-                    <p class="pt-3 border-t border-line text-xs text-muted">Pesanan dihentikan dengan status {{ $statusTampil }}.</p>
+                    <p class="mt-4 pt-3 border-t border-line text-xs text-muted">Pesanan dihentikan dengan status {{ $statusTampil }}.</p>
                 @endif
             </section>
 
-            <section class="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-xl" aria-labelledby="rincian-pembayaran">
-                <h2 id="rincian-pembayaran" class="text-xs font-semibold uppercase tracking-wider text-muted">Rincian Pembayaran</h2>
-                <dl class="mt-4 divide-y divide-line text-sm">
-                    <div class="flex justify-between gap-3 py-2.5">
-                        <dt class="text-muted">Harga unit</dt>
-                        <dd class="font-semibold text-ink tabular-nums">Rp {{ number_format($order->unit->harga, 0, ',', '.') }}</dd>
-                    </div>
-                    <div class="flex justify-between gap-3 py-2.5">
-                        <dt class="text-muted">Booking fee</dt>
-                        <dd class="font-semibold text-ink tabular-nums">Rp {{ number_format($order->booking_fee, 0, ',', '.') }}</dd>
-                    </div>
-                    @if ($order->dp_rencana > 0)
+            <div class="lg:col-span-7 space-y-6">
+                <section class="bg-surface border border-line rounded-3xl p-6 shadow-xl" aria-labelledby="rincian-pembayaran">
+                    <h2 id="rincian-pembayaran" class="text-xs font-semibold uppercase tracking-wider text-muted">Rincian Pembayaran</h2>
+                    <dl class="mt-4 divide-y divide-line text-sm">
                         <div class="flex justify-between gap-3 py-2.5">
-                            <dt class="text-muted">Uang muka (DP)</dt>
-                            <dd class="font-semibold text-ink tabular-nums">Rp {{ number_format($order->dp_rencana, 0, ',', '.') }}</dd>
-                        </div>
-                    @endif
-                    @if ($order->metode === 'Kredit')
-                        <div class="flex justify-between gap-3 py-2.5">
-                            <dt class="text-muted">Angsuran estimasi</dt>
-                            <dd class="font-semibold text-ink tabular-nums">{{ $order->angsuran_estimasi ? 'Rp '.number_format($order->angsuran_estimasi, 0, ',', '.').' / bulan' : '-' }}</dd>
+                            <dt class="text-muted">Harga unit</dt>
+                            <dd class="font-semibold text-ink tabular-nums">Rp {{ number_format($order->unit->harga, 0, ',', '.') }}</dd>
                         </div>
                         <div class="flex justify-between gap-3 py-2.5">
-                            <dt class="text-muted">Tenor</dt>
-                            <dd class="font-semibold text-ink">{{ $order->tenor ? $order->tenor.' bulan' : '-' }}</dd>
+                            <dt class="text-muted">Booking fee</dt>
+                            <dd class="font-semibold text-ink tabular-nums">Rp {{ number_format($order->booking_fee, 0, ',', '.') }}</dd>
                         </div>
-                        <div class="flex justify-between gap-3 py-2.5">
-                            <dt class="text-muted">Leasing</dt>
-                            <dd class="font-semibold text-ink text-right">{{ $order->leasing->nama ?? '-' }}</dd>
-                        </div>
-                    @endif
-                    <div class="flex justify-between gap-3 py-2.5">
-                        <dt class="text-muted">Metode</dt>
-                        <dd class="font-semibold text-ink">{{ $order->metode }}</dd>
-                    </div>
-                    <div class="flex justify-between gap-3 py-2.5">
-                        <dt class="text-muted">Status pelunasan</dt>
-                        <dd class="text-right">
-                            @if ($order->invoice?->lunas_at)
-                                <span class="font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums">Lunas {{ $order->invoice->lunas_at->format('d M Y') }}</span>
-                            @elseif ($order->invoice)
-                                <span class="font-semibold text-ink">Belum lunas</span>
-                            @else
-                                <span class="text-muted">Invoice belum terbit</span>
-                            @endif
-                        </dd>
-                    </div>
-                </dl>
-            </section>
-        </div>
-
-        <!-- Payment & Verification Action Panel -->
-        @if ($order->status === 'MenungguBayar')
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Payment Instructions -->
-                <div class="p-6 bg-surface border border-line rounded-3xl shadow-xl space-y-4">
-                    <p class="text-xs font-semibold tracking-wider text-accent uppercase">Instruksi Pembayaran</p>
-                    <h2 class="font-bold text-lg text-ink">Transfer Tanda Jadi (Booking Fee)</h2>
-                    <p class="text-3xl font-extrabold text-ink tabular-nums tracking-tight">Rp {{ number_format($order->booking_fee, 0, ',', '.') }}</p>
-                    
-                    <div class="space-y-2 pt-2">
-                        @foreach ($order->branch->bankAccounts->where('aktif', true) as $rek)
-                            <div class="flex items-center justify-between gap-3 bg-surface border border-line rounded-xl px-4 py-3">
-                                <div>
-                                    <p class="text-xs text-muted">{{ $rek->bank }}</p>
-                                    <p class="font-mono font-bold text-ink text-sm">{{ $rek->no_rek }}</p>
-                                    <p class="text-[11px] text-muted">a.n. {{ $rek->atas_nama }}</p>
-                                </div>
-                                <button type="button" data-salin="{{ $rek->no_rek }}" 
-                                    class="text-xs font-bold text-ink bg-line hover:bg-line px-3 py-1.5 rounded-lg min-h-[36px] transition-colors">
-                                    Salin
-                                </button>
+                        @if ($order->dp_rencana > 0)
+                            <div class="flex justify-between gap-3 py-2.5">
+                                <dt class="text-muted">Uang muka (DP)</dt>
+                                <dd class="font-semibold text-ink tabular-nums">Rp {{ number_format($order->dp_rencana, 0, ',', '.') }}</dd>
                             </div>
-                        @endforeach
-                    </div>
+                        @endif
+                        @if ($order->metode === 'Kredit')
+                            <div class="flex justify-between gap-3 py-2.5">
+                                <dt class="text-muted">Angsuran estimasi</dt>
+                                <dd class="font-semibold text-ink tabular-nums">{{ $order->angsuran_estimasi ? 'Rp '.number_format($order->angsuran_estimasi, 0, ',', '.').' / bulan' : '-' }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-3 py-2.5">
+                                <dt class="text-muted">Tenor</dt>
+                                <dd class="font-semibold text-ink">{{ $order->tenor ? $order->tenor.' bulan' : '-' }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-3 py-2.5">
+                                <dt class="text-muted">Leasing</dt>
+                                <dd class="font-semibold text-ink text-right">{{ $order->leasing->nama ?? '-' }}</dd>
+                            </div>
+                        @endif
+                        <div class="flex justify-between gap-3 py-2.5">
+                            <dt class="text-muted">Metode</dt>
+                            <dd class="font-semibold text-ink">{{ $order->metode }}</dd>
+                        </div>
+                        <div class="flex justify-between gap-3 py-2.5">
+                            <dt class="text-muted">Status pelunasan</dt>
+                            <dd class="text-right">
+                                @if ($order->invoice?->lunas_at)
+                                    <span class="font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums">Lunas {{ $order->invoice->lunas_at->format('d M Y') }}</span>
+                                @elseif ($order->invoice)
+                                    <span class="font-semibold text-ink">Belum lunas</span>
+                                @else
+                                    <span class="text-muted">Invoice belum terbit</span>
+                                @endif
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
 
-                    <div class="mt-4 pt-4 border-t border-line space-y-1">
-                        <p class="text-xs font-semibold text-accent">Batas Waktu Bayar: {{ $order->deadline_at->format('d M Y H:i') }} WIB</p>
-                        <p class="text-xs text-muted">Sisa waktu: <span id="sisa-bayar" data-deadline="{{ $order->deadline_at->toIso8601String() }}" class="font-bold text-ink tabular-nums">-</span></p>
-                        <p class="text-[11px] text-muted leading-relaxed pt-1">Jika melewati batas waktu pembayaran, SPK akan otomatis kedaluwarsa (Expired) dan alokasi unit dilepas kembali ke katalog.</p>
-                    </div>
-                </div>
-
-                <!-- Proof of Payment Upload -->
-                <div class="p-6 bg-surface border border-line rounded-3xl shadow-xl flex flex-col justify-between">
-                    <div>
-                        <h2 class="font-bold text-lg text-ink">Unggah Bukti Transfer</h2>
-                        <p class="mt-1 text-xs text-muted">Format file yang didukung: JPG, PNG, atau PDF (Maksimal 2 MB).</p>
-
-                        @auth
-                            @if ($order->customer->user_id !== null && $order->customer->user_id !== auth()->id())
-                                <p class="mt-4 p-4 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
-                                    SPK ini terdaftar atas akun lain. Masuk dengan akun pembuat SPK untuk mengunggah bukti bayar.
+                <!-- Payment & Verification Action Panel -->
+                @if ($order->status === 'MenungguBayar')
+                    @if ($order->metode === 'Cash')
+                        <div class="p-6 bg-surface border border-line rounded-3xl shadow-xl space-y-4">
+                            <div>
+                                <p class="text-xs font-semibold tracking-wider text-accent uppercase">Instruksi Pembayaran Tunai</p>
+                                <h2 class="mt-1 font-bold text-lg text-ink">Pembayaran di Kasir Cabang {{ $order->branch->nama }}</h2>
+                                <p class="mt-2 text-2xl font-extrabold text-ink tabular-nums tracking-tight">
+                                    Booking Fee Rp {{ number_format($order->booking_fee, 0, ',', '.') }}
                                 </p>
-                            @else
-                                <form action="{{ route('spk.upload', $order->no_spk) }}" method="POST" enctype="multipart/form-data" class="mt-6 space-y-4">
-                                    @csrf
-                                    <div>
-                                        <label for="bukti" class="block text-xs font-semibold uppercase tracking-wider text-muted">File Bukti Struk / Mutasi</label>
-                                        <div class="mt-2 p-4 bg-surface border border-line rounded-2xl">
-                                            <input id="bukti" type="file" name="bukti" required accept=".jpg,.jpeg,.png,.pdf" 
-                                                class="w-full text-xs text-muted file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-accent-strong file:text-white hover:file:bg-[#9E0E19] cursor-pointer">
-                                        </div>
-                                    </div>
-                                    <x-input-error :messages="$errors->all()" class="text-accent text-xs" />
-                                    <button type="submit" 
-                                        class="w-full py-3.5 px-6 font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center">
-                                        Kirim Bukti Pembayaran
-                                    </button>
-                                </form>
-                            @endif
-                        @else
-                            <div class="mt-6 p-6 bg-surface border border-line rounded-2xl text-center">
-                                <p class="text-sm text-muted">Silakan masuk ke akun Anda terlebih dahulu untuk mengunggah bukti bayar.</p>
-                                <a href="{{ route('login') }}" class="mt-4 inline-flex items-center px-5 py-2.5 text-xs font-bold text-white bg-accent-strong rounded-xl">
-                                    Masuk Akun
-                                </a>
                             </div>
-                        @endauth
-                    </div>
-                </div>
+
+                            <div class="p-4 bg-surface-2 border border-line rounded-2xl text-xs sm:text-sm text-muted space-y-1.5">
+                                <p class="text-ink font-semibold">{{ $order->branch->nama }}</p>
+                                @if ($order->branch->alamat)
+                                    <p>{{ $order->branch->alamat }}</p>
+                                @endif
+                                <p>Tunjukkan nomor SPK <strong class="font-mono text-ink">{{ $order->no_spk }}</strong> kepada kasir atau admin cabang saat melakukan pembayaran tunai.</p>
+                            </div>
+
+                            <div class="pt-3 border-t border-line flex flex-wrap items-center justify-between gap-3">
+                                <div class="space-y-1">
+                                    <p class="text-xs font-semibold text-accent">Batas Waktu Bayar: {{ $order->deadline_at->format('d M Y H:i') }} WIB</p>
+                                    <p class="text-xs text-muted">Sisa waktu: <span id="sisa-bayar" data-deadline="{{ $order->deadline_at->toIso8601String() }}" class="font-bold text-ink tabular-nums">-</span></p>
+                                </div>
+                                @if ($order->branch->telp)
+                                    <a href="{{ \App\Support\Wa::chat($order->branch->telp, 'Halo '.$order->branch->nama.', saya ingin konfirmasi pembayaran tunai untuk SPK '.$order->no_spk.'.') }}" target="_blank" rel="noopener"
+                                        class="px-4 py-2.5 text-xs font-bold text-ink bg-surface border border-line hover:border-emerald-500/50 rounded-xl inline-flex items-center justify-center transition-colors">
+                                        Konfirmasi via WhatsApp
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <div class="p-6 bg-surface border border-line rounded-3xl shadow-xl space-y-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-xs font-semibold tracking-wider text-accent uppercase">Instruksi Pembayaran</p>
+                                    <h2 class="mt-1 font-bold text-lg text-ink">Transfer Tanda Jadi (Booking Fee)</h2>
+                                    <p class="mt-1 text-3xl font-extrabold text-ink tabular-nums tracking-tight">Rp {{ number_format($order->booking_fee, 0, ',', '.') }}</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    @foreach ($order->branch->bankAccounts->where('aktif', true) as $rek)
+                                        <div class="flex items-center justify-between gap-3 bg-surface-2 border border-line rounded-xl px-4 py-3">
+                                            <div class="min-w-0">
+                                                <p class="text-xs font-semibold text-accent">{{ $rek->bank }}</p>
+                                                <p class="font-mono font-bold text-ink text-sm tabular-nums">{{ $rek->no_rek }}</p>
+                                                <p class="text-[11px] text-muted truncate">a.n. {{ $rek->atas_nama }}</p>
+                                            </div>
+                                            <button type="button" data-salin="{{ $rek->no_rek }}"
+                                                class="text-xs font-bold text-ink bg-surface border border-line hover:border-accent px-3 py-1.5 rounded-lg min-h-[36px] shrink-0 transition-colors">
+                                                Salin
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="pt-3 border-t border-line space-y-1">
+                                    <p class="text-xs font-semibold text-accent">Batas Waktu Bayar: {{ $order->deadline_at->format('d M Y H:i') }} WIB</p>
+                                    <p class="text-xs text-muted">Sisa waktu: <span id="sisa-bayar" data-deadline="{{ $order->deadline_at->toIso8601String() }}" class="font-bold text-ink tabular-nums">-</span></p>
+                                    <p class="text-[11px] text-muted leading-relaxed pt-1">Jika melewati batas waktu pembayaran, SPK akan otomatis kedaluwarsa (Expired) dan alokasi unit dilepas kembali ke katalog.</p>
+                                </div>
+                            </div>
+
+                            <div class="pt-5 border-t border-line">
+                                <h2 class="font-bold text-base text-ink">Unggah Bukti Transfer</h2>
+                                <p class="mt-1 text-xs text-muted">Format file yang didukung: JPG, PNG, atau PDF (Maksimal 2 MB).</p>
+
+                                @auth
+                                    @if ($order->customer->user_id !== null && $order->customer->user_id !== auth()->id())
+                                        <p class="mt-4 p-4 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                                            SPK ini terdaftar atas akun lain. Masuk dengan akun pembuat SPK untuk mengunggah bukti bayar.
+                                        </p>
+                                    @else
+                                        <form action="{{ route('spk.upload', $order->no_spk) }}" method="POST" enctype="multipart/form-data" class="mt-4 space-y-4">
+                                            @csrf
+                                            <div>
+                                                <label for="bukti" class="block text-xs font-semibold uppercase tracking-wider text-muted">File Bukti Struk / Mutasi</label>
+                                                <div class="mt-2 p-3.5 bg-surface-2 border border-line rounded-2xl">
+                                                    <input id="bukti" type="file" name="bukti" required accept=".jpg,.jpeg,.png,.pdf"
+                                                        class="w-full text-xs text-muted file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-accent-strong file:text-white hover:file:bg-[#9E0E19] cursor-pointer">
+                                                </div>
+                                            </div>
+                                            <x-input-error :messages="$errors->all()" class="text-accent text-xs" />
+                                            <button type="submit"
+                                                class="w-full py-3.5 px-6 font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center">
+                                                Kirim Bukti Pembayaran
+                                            </button>
+                                        </form>
+                                    @endif
+                                @else
+                                    <div class="mt-6 p-6 bg-surface border border-line rounded-2xl text-center">
+                                        <p class="text-sm text-muted">Silakan masuk ke akun Anda terlebih dahulu untuk mengunggah bukti bayar.</p>
+                                        <a href="{{ route('login') }}" class="mt-4 inline-flex items-center px-5 py-2.5 text-xs font-bold text-white bg-accent-strong rounded-xl">
+                                            Masuk Akun
+                                        </a>
+                                    </div>
+                                @endauth
+                            </div>
+                        </div>
+                    @endif
+                @endif
             </div>
-        @endif
+        </div>
 
         @if ($order->status === 'MenungguVerifikasi')
             <div class="p-6 bg-amber-500/10 border border-amber-500/20 rounded-3xl flex items-center gap-4">

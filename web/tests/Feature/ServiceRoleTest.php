@@ -122,7 +122,7 @@ class ServiceRoleTest extends TestCase
         $this->actingAs($sa)->get(route('admin.services.show', $tugas))
             ->assertOk()
             ->assertSee('data-total="150000"', false)
-            ->assertSee('Samakan estimasi');
+            ->assertSee('Samakan dengan total rincian');
     }
 
     public function test_konfirmasi_wajib_isi_estimasi(): void
@@ -169,14 +169,14 @@ class ServiceRoleTest extends TestCase
     {
         $this->seed(RoleSeeder::class);
         $jkt = Branch::create(['kode' => 'JKT', 'nama' => 'Jakarta', 'booking_fee' => 5000000, 'aktif' => true]);
-        $mekanik = User::factory()->create(['branch_id' => $jkt->id]);
-        $mekanik->assignRole('mekanik');
-        $tugas = $this->buatBooking($jkt, $mekanik);
+        $sa = User::factory()->create(['branch_id' => $jkt->id]);
+        $sa->assignRole('service-advisor');
+        $tugas = $this->buatBooking($jkt);
         $tugas->update(['status' => 'Dikerjakan']);
 
-        $this->actingAs($mekanik)->patch(route('admin.services.update', $tugas), ['status' => 'Selesai'])
+        $this->actingAs($sa)->patch(route('admin.services.update', $tugas), ['status' => 'Selesai'])
             ->assertSessionHasErrors(['metode_bayar']);
-        $this->actingAs($mekanik)->patch(route('admin.services.update', $tugas), ['status' => 'Selesai', 'metode_bayar' => 'Transfer'])
+        $this->actingAs($sa)->patch(route('admin.services.update', $tugas), ['status' => 'Selesai', 'metode_bayar' => 'Transfer'])
             ->assertRedirect();
         $this->assertSame('Transfer', $tugas->fresh()->metode_bayar);
     }
@@ -207,7 +207,7 @@ class ServiceRoleTest extends TestCase
 
         $this->actingAs($sa)->post(route('admin.services.detail', $tugasJkt), [
             'jenis' => 'Pekerjaan', 'deskripsi' => 'Ganti kampas', 'qty' => 1, 'harga_satuan' => 150000,
-        ])->assertForbidden();
+        ])->assertRedirect();
         $this->actingAs($sa)->get(route('admin.services.show', $tugasBdg))->assertForbidden();
         $this->actingAs($sa)->get(route('admin.services.show', $tugasJkt))->assertOk();
     }

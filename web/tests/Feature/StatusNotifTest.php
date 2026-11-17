@@ -10,7 +10,6 @@ use App\Models\Customer;
 use App\Models\Sparepart;
 use App\Models\SparepartOrder;
 use App\Models\TestDrive;
-use App\Models\TradeIn;
 use App\Models\User;
 use App\Models\Variant;
 use Database\Seeders\RoleSeeder;
@@ -52,23 +51,6 @@ class StatusNotifTest extends TestCase
             ->assertRedirect();
         Queue::assertPushed(SendMailJob::class, fn ($job) => $job->to === 'cust@mail.com'
             && str_contains($job->subject, 'dibatalkan'));
-    }
-
-    public function test_trade_in_ditawar_mengirim_email_harga(): void
-    {
-        Queue::fake();
-        config()->set('mail.workshop_to', null);
-        $this->seed(RoleSeeder::class);
-        $customer = $this->buatCustomer('cust@mail.com');
-        $trade = TradeIn::create(['customer_id' => $customer->id, 'merk_tipe' => 'Lama X', 'tahun' => 2015, 'km' => 80000, 'status' => 'Diajukan']);
-        $admin = User::factory()->create();
-        $admin->assignRole('admin-cabang');
-
-        $this->actingAs($admin)->patch(route('admin.trade-ins.update', $trade), ['status' => 'Ditawar', 'harga_penawaran' => 120000000])
-            ->assertRedirect();
-
-        Queue::assertPushed(SendMailJob::class, fn ($job) => $job->to === 'cust@mail.com'
-            && str_contains($job->subject, 'Ditawar'));
     }
 
     public function test_sparepart_lunas_mengirim_email(): void

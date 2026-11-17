@@ -1,4 +1,4 @@
-<x-site-layout judul="Pertanyaan Umum (FAQ)" deskripsi="Jawaban resmi seputar alur SPK, transfer booking fee, verifikasi dokumen, trade-in, test drive, dan servis di Ayoto Nippon.">
+<x-site-layout judul="Pertanyaan Umum (FAQ)" deskripsi="Jawaban resmi seputar alur SPK, transfer booking fee, verifikasi dokumen, test drive, dan servis di Ayoto Nippon.">
     <x-site-header />
 
     <div class="w-full px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -15,9 +15,9 @@
                 ['Apa syarat mengajukan pemesanan SPK online?', 'Buat akun pelanggan, pilih unit berstatus Tersedia di katalog berdasarkan nomor rangka (VIN), lalu klik Ajukan SPK. Setelah nomor SPK terbit, transfer booking fee ke rekening resmi cabang sebelum batas waktu 24 jam.'],
                 ['Berapa nominal booking fee dan dibayarkan ke mana?', 'Nominal booking fee mengikuti ketentuan cabang resmi dan tercantum secara transparan pada dokumen SPK beserta nomor rekening bank cabang resmi. Pembayaran harus diselesaikan sebelum batas waktu kedaluwarsa.'],
                 ['Apa yang terjadi jika melewati batas waktu pembayaran booking fee?', 'Sistem otomatis mengubah status SPK menjadi Expired (Kedaluwarsa) dan alokasi unit fisik akan dilepaskan kembali ke katalog publik. Anda dapat mengajukan SPK baru untuk unit lain yang masih tersedia.'],
-                ['Berapa lama proses verifikasi bukti transfer pembayaran?', 'Admin cabang memvalidasi bukti pembayaran pada jam operasional kerja dealer. Anda dapat memantau status secara langsung di halaman Lacak SPK atau Pesanan Saya: MenungguBayar, MenungguVerifikasi, Deal, atau Ditolak.'],
-                ['Bagaimana cara melacak perkembangan pesanan kendaraan?', 'Buka menu Lacak SPK di navigasi atas, lalu masukkan nomor registrasi SPK Anda (contoh: SPK-2026-0001). Pengguna yang telah masuk akun juga dapat melihat riwayat lengkap di menu Pesanan Saya.'],
-                ['Apakah tukar tambah (trade-in) bisa digabung dengan pembelian unit baru?', 'Bisa. Ajukan formulir Trade-In dan tautkan nomor SPK aktif Anda. Tim appraisal kami akan melakukan inspeksi fisik kendaraan lama Anda dan memberikan nilai taksiran sebagai pengurang uang muka.'],
+                ['Berapa lama proses verifikasi bukti transfer pembayaran?', 'Admin cabang memvalidasi bukti pembayaran pada jam operasional kerja dealer. Anda dapat memantau status secara langsung di halaman Pesanan Saya: MenungguBayar, MenungguVerifikasi, Deal, atau Ditolak.'],
+                ['Bagaimana cara melacak perkembangan pesanan kendaraan?', 'Masuk ke akun Anda lalu buka menu Pesanan Saya untuk melihat riwayat lengkap dan detail status setiap SPK Anda (contoh: SPK-2026-0001).'],
+                ['Bagaimana proses verifikasi bukti bayar dan dokumen SPK?', 'Admin cabang memverifikasi bukti transfer serta KTP maksimal 1x24 jam kerja. Setelah terverifikasi, invoice resmi diterbitkan dan jadwal serah terima unit diproses.'],
                 ['Apa saja persyaratan untuk mengikuti sesi test drive?', 'Masuk ke akun pelanggan, cantumkan NIK KTP serta jadwal dan varian yang diinginkan. Bawa SIM A yang masih berlaku saat menghadiri sesi uji coba di dealer cabang terpilih.'],
                 ['Apa dokumen yang perlu disiapkan saat booking servis berkala?', 'Nomor polisi kendaraan atau 17 digit VIN dan catatan keluhan mesin. Estimasi biaya dan waktu pengerjaan akan diinformasikan oleh service advisor saat kedatangan.'],
                 ['Bagaimana alur pembelian suku cadang asli (sparepart)?', 'Pilih part dari katalog sparepart cabang terdekat, lakukan pembayaran sesuai nomor SPO yang terbit sebelum deadline, lalu ambil langsung di gudang cabang dealer.'],

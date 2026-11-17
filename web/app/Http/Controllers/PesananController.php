@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\ServiceBooking;
 use App\Models\SparepartOrder;
 use App\Models\TestDrive;
-use App\Models\TradeIn;
 use App\Models\User;
 use App\Jobs\SendMailJob;
 use App\Jobs\SendWaJob;
@@ -32,7 +31,6 @@ class PesananController extends Controller
             'spks' => $ids ? Order::with(['unit.variant.carModel.brand', 'branch', 'invoice'])->whereIn('customer_id', $ids)->latest()->get() : collect(),
             'testDrives' => $ids ? TestDrive::with(['variant.carModel.brand', 'branch', 'color'])->whereIn('customer_id', $ids)->orderBy('jadwal')->get() : collect(),
             'servis' => $ids ? ServiceBooking::with('branch')->whereIn('customer_id', $ids)->orderBy('jadwal')->get() : collect(),
-            'tradeIns' => $ids ? TradeIn::whereIn('customer_id', $ids)->latest()->get() : collect(),
             'spos' => $ids ? SparepartOrder::with('branch')->whereIn('customer_id', $ids)->latest()->get() : collect(),
         ]);
     }

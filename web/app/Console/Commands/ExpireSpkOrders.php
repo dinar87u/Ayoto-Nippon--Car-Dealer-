@@ -21,12 +21,22 @@ class ExpireSpkOrders extends Command
             ->where('deadline_at', '<', now())
             ->chunkById(100, function ($orders) use (&$count) {
                 foreach ($orders as $order) {
-                    DB::transaction(function () use ($order, &$count) {
+                    $expired = DB::transaction(function () use ($order) {
+                        $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+                        // Cek ulang di dalam transaksi: bisa saja diverifikasi admin di antara query dan kunci.
+                        if ($order->status !== 'MenungguBayar' || $order->deadline_at->isFuture()) {
+                            return false;
+                        }
                         $order->update(['status' => 'Expired']);
                         $order->unit()->update(['status' => 'Tersedia']);
-                        $count++;
+                        // Lead SPK terakhir milik customer ini ikut dibatalkan agar tidak menggantung.
+                        $order->customer->leads()->where('status', 'SPK')->latest()->first()?->update(['status' => 'Batal']);
+                        return true;
                     });
-                    SendWaJob::dispatch($order->customer->telp, Notifikasi::spkExpired($order));
+                    if ($expired) {
+                        $count++;
+                        SendWaJob::dispatch($order->customer->telp, Notifikasi::spkExpired($order));
+                    }
                 }
             });
 

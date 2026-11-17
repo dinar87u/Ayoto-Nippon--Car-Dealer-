@@ -16,8 +16,7 @@
                     <div>
                         <div class="flex items-center justify-between pb-3 border-b border-line">
                             <span class="text-xs font-bold uppercase tracking-wider text-accent">Dealer Resmi 3S</span>
-                            <span class="text-xs text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <span class="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">
                                 Buka
                             </span>
                         </div>

@@ -65,8 +65,7 @@
                             <p class="mt-4 text-2xl font-black text-ink tabular-nums tracking-tight">
                                 Rp {{ number_format($part->harga, 0, ',', '.') }}
                             </p>
-                            <div class="mt-3 flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full {{ $part->stok > 0 ? 'bg-emerald-400' : 'bg-rose-50 dark:bg-rose-500/100' }}"></span>
+                            <div class="mt-3">
                                 <span class="text-xs font-semibold {{ $part->stok > 0 ? 'text-muted' : 'text-accent' }}">
                                     {{ $part->stok > 0 ? 'Tersedia: '.$part->stok.' unit' : 'Stok habis' }}
                                 </span>

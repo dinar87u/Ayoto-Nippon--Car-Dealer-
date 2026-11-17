@@ -3,11 +3,6 @@
 
     <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
         <div class="mb-8">
-            <nav class="flex items-center gap-2 text-xs text-muted mb-2">
-                <a href="{{ route('home') }}" class="hover:text-accent transition-colors">Beranda</a>
-                <span>/</span>
-                <span class="text-ink font-medium">Servis Bengkel</span>
-            </nav>
             <h1 class="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">Booking Jadwal Servis Berkala</h1>
             <p class="mt-2 text-sm sm:text-base text-muted max-w-3xl leading-relaxed">
                 Percayakan perawatan mobil Anda pada teknisi bersertifikasi pabrikan dengan peralatan diagnostik komputer mutakhir dan suku cadang asli bergaransi.
@@ -23,7 +18,6 @@
                         <h2 class="mt-1 text-xl sm:text-2xl font-bold text-ink">Formulir Reservasi Stall Servis</h2>
                     </div>
                     <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-pulse"></span>
                         Garansi Servis 1.000 KM
                     </span>
                 </div>
@@ -32,8 +26,7 @@
                     @csrf
 
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-ink mb-4 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-accent-strong"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-ink mb-4">
                             Informasi Pemilik & Kendaraan
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -82,8 +75,7 @@
                     </div>
 
                     <div class="pt-4 border-t border-line">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-ink mb-4 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-accent-strong"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-ink mb-4">
                             Lokasi Bengkel & Waktu Kunjungan
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">

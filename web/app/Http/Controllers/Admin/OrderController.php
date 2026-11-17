@@ -30,7 +30,17 @@ class OrderController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.pesanan.index', ['orders' => $orders, 'status' => $status, 'daftarStatus' => self::STATUS]);
+        // Hitungan per tahap untuk chip filter.
+        $jumlah = [
+            'semua' => Order::count(),
+            'MenungguBayar' => Order::where('status', 'MenungguBayar')->count(),
+            'MenungguVerifikasi' => Order::where('status', 'MenungguVerifikasi')->count(),
+            'Deal' => Order::where('status', 'Deal')->count(),
+            'Lunas' => Order::whereHas('invoice', fn ($i) => $i->whereNotNull('lunas_at'))->count(),
+            'arsip' => Order::whereIn('status', ['Batal', 'Expired', 'Ditolak'])->count(),
+        ];
+
+        return view('admin.pesanan.index', ['orders' => $orders, 'status' => $status, 'daftarStatus' => self::STATUS, 'jumlah' => $jumlah]);
     }
 
     public function update(Request $request, Order $order)

@@ -26,7 +26,6 @@
                         <div class="flex flex-col">
                             <span class="text-base sm:text-lg font-bold tracking-tight text-ink flex items-center gap-1.5">
                                 Ayoto Nippon
-                                <span class="w-1.5 h-1.5 rounded-full bg-accent-strong"></span>
                             </span>
                             <span class="text-[10px] tracking-widest uppercase text-muted font-medium -mt-0.5">Official Dealer</span>
                         </div>

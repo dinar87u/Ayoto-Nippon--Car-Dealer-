@@ -18,7 +18,10 @@ class BrandController extends Controller
 
     public function create()
     {
-        return view('admin.brands.form', ['brand' => new Brand()]);
+        return view('admin.brands.form', [
+            'brand' => new Brand(),
+            'sourceLogos' => $this->sourceLogos(),
+        ]);
     }
 
     public function store(Request $request)
@@ -32,7 +35,10 @@ class BrandController extends Controller
 
     public function edit(Brand $brand)
     {
-        return view('admin.brands.form', compact('brand'));
+        return view('admin.brands.form', [
+            'brand' => $brand,
+            'sourceLogos' => $this->sourceLogos(),
+        ]);
     }
 
     public function update(Request $request, Brand $brand)
@@ -52,5 +58,19 @@ class BrandController extends Controller
         $data['aktif'] = $request->boolean('aktif');
 
         return $data;
+    }
+
+    private function sourceLogos(): array
+    {
+        $dir = public_path('images/brands');
+        if (! is_dir($dir)) {
+            return [];
+        }
+
+        return collect(glob($dir.'/*.{png,svg,jpg,jpeg,webp}', GLOB_BRACE) ?: [])
+            ->map(fn ($path) => 'images/brands/'.basename($path))
+            ->sort()
+            ->values()
+            ->all();
     }
 }

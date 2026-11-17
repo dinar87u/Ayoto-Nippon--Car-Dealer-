@@ -15,12 +15,20 @@ use Illuminate\Validation\ValidationException;
 
 class SparepartOrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = SparepartOrder::with(['customer', 'branch', 'items.sparepart'])
-            ->latest()->paginate(15);
+        $status = $request->validate(['status' => ['nullable', 'in:MenungguBayar,Lunas,Batal']])['status'] ?? null;
 
-        return view('admin.sparepart-orders.index', compact('orders'));
+        $orders = SparepartOrder::with(['customer', 'branch', 'items.sparepart'])
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->latest()->paginate(15)->withQueryString();
+
+        // Hitungan per status untuk chip filter.
+        $jumlah = collect(['MenungguBayar', 'Lunas', 'Batal'])
+            ->mapWithKeys(fn ($s) => [$s => SparepartOrder::where('status', $s)->count()])
+            ->put('semua', SparepartOrder::count());
+
+        return view('admin.sparepart-orders.index', compact('orders', 'jumlah', 'status'));
     }
 
     public function checkout(Sparepart $sparepart)
@@ -125,31 +133,41 @@ class SparepartOrderController extends Controller
     {
         $data = $request->validate(['aksi' => ['required', 'in:lunas,batal']]);
 
-        DB::transaction(function () use ($data, $order) {
+        $berubah = DB::transaction(function () use ($data, $order) {
             if ($data['aksi'] === 'batal' && $order->status === 'MenungguBayar') {
                 foreach ($order->items as $item) {
                     $item->sparepart->increment('stok', $item->qty);
                 }
                 $order->update(['status' => 'Batal']);
-            } elseif ($data['aksi'] === 'lunas' && $order->status === 'MenungguBayar') {
-                $order->update(['status' => 'Lunas']);
+
+                return true;
             }
+            if ($data['aksi'] === 'lunas' && $order->status === 'MenungguBayar') {
+                $order->update(['status' => 'Lunas']);
+
+                return true;
+            }
+
+            // Order sudah diproses sebelumnya (mis. dobel klik) — jangan kirim notifikasi lagi.
+            return false;
         });
 
-        SendWaJob::dispatch($order->customer->telp, $data['aksi'] === 'lunas'
-            ? Notifikasi::spoLunas($order)
-            : Notifikasi::spoBatal($order));
+        if ($berubah) {
+            SendWaJob::dispatch($order->customer->telp, $data['aksi'] === 'lunas'
+                ? Notifikasi::spoLunas($order)
+                : Notifikasi::spoBatal($order));
 
-        $fresh = $order->fresh();
-        if ($email = $fresh->customer->user?->email) {
-            $pesan = $data['aksi'] === 'lunas' ? Notifikasi::spoLunas($fresh) : Notifikasi::spoBatal($fresh);
-            SendMailJob::dispatch($email, "Order sparepart {$fresh->no_spo} {$data['aksi']}",
-                view('emails.notifikasi', [
-                    'judul' => "Order sparepart {$fresh->no_spo} {$data['aksi']}",
-                    'baris' => explode("\n", $pesan),
+            $fresh = $order->fresh();
+            if ($email = $fresh->customer->user?->email) {
+                $pesan = $data['aksi'] === 'lunas' ? Notifikasi::spoLunas($fresh) : Notifikasi::spoBatal($fresh);
+                SendMailJob::dispatch($email, "Order sparepart {$fresh->no_spo} {$data['aksi']}",
+                    view('emails.notifikasi', [
+                        'judul' => "Order sparepart {$fresh->no_spo} {$data['aksi']}",
+                        'baris' => explode("\n", $pesan),
                     'tombol' => null,
                     'kontak' => null,
                 ])->render(), [], true);
+            }
         }
 
         return back()->with('sukses', 'Status order diperbarui.');

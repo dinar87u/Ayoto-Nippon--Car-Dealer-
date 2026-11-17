@@ -31,4 +31,10 @@ return [
         ],
     ],
 
+    // Nomor WhatsApp sales penerima chat pembeli (format internasional, tanpa tanda +).
+    // Ganti lewat .env: SALES_WHATSAPP_NUMBER=628xxxxxxxxxx
+    'wa' => [
+        'sales' => env('SALES_WHATSAPP_NUMBER', '6281234567890'),
+    ],
+
 ];

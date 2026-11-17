@@ -36,11 +36,26 @@ class MasterSeeder extends Seeder
             Branch::where('kode', $kode)->whereNull('jam_operasional')->update(['jam_operasional' => $jam]);
         }
 
-        foreach ([$jakarta, $bandung] as $i => $branch) {
-            BankAccount::firstOrCreate(
-                ['branch_id' => $branch->id, 'no_rek' => '12300010'.($i + 1)],
-                ['bank' => 'BCA', 'atas_nama' => 'PT Ayoto Nippon', 'aktif' => true]
-            );
+        $rekeningCabang = [
+            $jakarta->id => [
+                ['bank' => 'BCA', 'no_rek' => '5420-8812-01', 'atas_nama' => 'PT Ayoto Nippon Jakarta'],
+                ['bank' => 'Mandiri', 'no_rek' => '1240-0098-11201', 'atas_nama' => 'PT Ayoto Nippon Jakarta'],
+                ['bank' => 'BRI', 'no_rek' => '0341-0100-4412-301', 'atas_nama' => 'PT Ayoto Nippon Jakarta'],
+            ],
+            $bandung->id => [
+                ['bank' => 'BCA', 'no_rek' => '7770-4419-02', 'atas_nama' => 'PT Ayoto Nippon Bandung'],
+                ['bank' => 'Mandiri', 'no_rek' => '1310-0087-22402', 'atas_nama' => 'PT Ayoto Nippon Bandung'],
+                ['bank' => 'BRI', 'no_rek' => '0354-0100-7821-302', 'atas_nama' => 'PT Ayoto Nippon Bandung'],
+            ],
+        ];
+        BankAccount::where('bank', 'BNI')->delete();
+        foreach ($rekeningCabang as $branchId => $banks) {
+            foreach ($banks as $item) {
+                BankAccount::updateOrCreate(
+                    ['branch_id' => $branchId, 'bank' => $item['bank']],
+                    ['no_rek' => $item['no_rek'], 'atas_nama' => $item['atas_nama'], 'aktif' => true]
+                );
+            }
         }
 
         foreach (['Toyota', 'Honda', 'Daihatsu', 'Suzuki', 'Mitsubishi', 'Nissan', 'Mazda', 'Isuzu', 'Wuling', 'Chery', 'MG', 'Hyundai', 'Kia', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Lexus', 'Volvo', 'Subaru', 'Jeep', 'Land Rover', 'Ford', 'DFSK', 'BYD', 'Aion', 'Neta', 'Jaecoo', 'Jetour', 'VinFast', 'Denza', 'Citroen', 'Porsche'] as $nama) {
@@ -1045,20 +1060,10 @@ class MasterSeeder extends Seeder
             'aktif' => true,
         ]);
 
-        Promo::firstOrCreate(['slug' => 'cashback-trade-in-25-juta'], [
-            'branch_id' => null,
-            'judul' => 'Cashback Trade-In s.d 25 Juta',
-            'banner' => 'images/promos/promo CASHBACK trade in.png',
-            'deskripsi' => 'Tukar tambah mobil lama Anda ke mobil baru semua merk di Ayoto Nippon dan dapatkan ekstra cashback hingga Rp 25.000.000.',
-            'mulai' => '2026-09-15',
-            'selesai' => '2026-12-31',
-            'aktif' => true,
-        ]);
-
         Content::firstOrCreate(['slug' => 'tentang-kami'], [
             'tipe' => 'halaman',
             'judul' => 'Tentang Kami',
-            'isi' => "PT Ayoto Nippon adalah dealer mobil dengan dua cabang di Jakarta dan Bandung.\n\nLayanan kami: penjualan unit baru, tukar tambah, test drive, servis berkala, dan sparepart asli.",
+            'isi' => "PT Ayoto Nippon adalah dealer mobil dengan dua cabang di Jakarta dan Bandung.\n\nLayanan kami: penjualan unit baru, test drive, servis berkala, dan sparepart asli.",
             'aktif' => true,
         ]);
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendMailJob;
 use App\Jobs\SendWaJob;
 use App\Support\Notifikasi;
+use App\Models\BankAccount;
 use App\Models\Branch;
 use App\Models\Color;
 use App\Models\Customer;
@@ -25,6 +26,7 @@ class SpkController extends Controller
     {
         $unitId = $request->query('unit_id');
         $variantId = $request->query('variant_id');
+        $terkunci = (bool) ($unitId || $variantId);
         $branchId = null;
         $colorId = null;
 
@@ -84,13 +86,19 @@ class SpkController extends Controller
         $leasings = LeasingPartner::where('aktif', true)->orderBy('nama')->get();
         $branches = Branch::where('aktif', true)->orderBy('nama')->get();
         $colors = Color::where('aktif', true)->orderBy('nama')->get();
+        $bankAccounts = BankAccount::where('aktif', true)->orderBy('branch_id')->orderBy('bank')->get();
         $salesList = User::role('sales')->orderBy('name')->get();
+        $varianDipilih = $variantId ? $variants->firstWhere('id', (int) $variantId) : null;
+        $warnaDipilih = $colorId ? $colors->firstWhere('id', (int) $colorId) : null;
 
-        return view('spk.create', compact('units', 'variants', 'leasings', 'branches', 'colors', 'salesList') + [
+        return view('spk.create', compact('units', 'variants', 'leasings', 'branches', 'colors', 'bankAccounts', 'salesList') + [
             'unit_id' => $unitId,
             'variant_id' => $variantId,
             'branch_id' => $branchId,
             'color_id' => $colorId,
+            'terkunci' => $terkunci && (bool) $varianDipilih,
+            'varianDipilih' => $varianDipilih,
+            'warnaDipilih' => $warnaDipilih,
             'prefill' => $prefill,
         ]);
     }
@@ -103,7 +111,7 @@ class SpkController extends Controller
             'nik' => ['required', 'digits:16'],
             'telp' => ['required', 'regex:/^[0-9]{10,15}$/'],
             'alamat' => ['required', 'string'],
-            'metode' => ['required', 'in:Cash,Kredit,TradeIn,Transfer'],
+            'metode' => ['required', 'in:Cash,Kredit,Transfer'],
             'leasing_id' => ['required_if:metode,Kredit', 'nullable', 'exists:leasing_partners,id'],
             'tenor' => ['required_if:metode,Kredit', 'nullable', 'integer', 'in:12,24,36,48'],
             'dp_rencana' => ['nullable', 'integer', 'min:0'],
@@ -203,7 +211,11 @@ class SpkController extends Controller
                 ])->render(), [], true);
         }
 
-        return redirect()->route('spk.show', $order->no_spk)->with('sukses', 'SPK berhasil dibuat. Segera transfer booking fee sebelum deadline.');
+        $pesanSukses = $order->metode === 'Cash'
+            ? 'SPK berhasil dibuat. Silakan lakukan pembayaran tunai di kasir cabang sebelum batas waktu.'
+            : 'SPK berhasil dibuat. Segera transfer booking fee sebelum batas waktu.';
+
+        return redirect()->route('spk.show', $order->no_spk)->with('sukses', $pesanSukses);
     }
 
     public function show(Request $request, string $no_spk)
@@ -236,6 +248,10 @@ class SpkController extends Controller
         $order->update([
             'bukti_path' => $request->file('bukti')->store('bukti', 'local'),
             'status' => 'MenungguVerifikasi',
+            // Bukti baru: hapus jejak verifikasi/penolakan lama agar riwayat tidak ambigu.
+            'verified_by' => null,
+            'verified_at' => null,
+            'tolak_alasan' => null,
         ]);
 
         $pesanBukti = Notifikasi::buktiDiterima($order);
