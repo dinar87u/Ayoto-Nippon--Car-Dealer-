@@ -41,18 +41,6 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $staf = $request->user()->hasAnyRole(self::PERAN_STAF);
-        $portalStaf = $request->routeIs('login.staf.store');
-
-        if ($portalStaf !== $staf) {
-            Auth::guard('web')->logout();
-            $request->session()->regenerateToken();
-
-            throw ValidationException::withMessages([
-                'email' => $portalStaf
-                    ? 'Akun ini bukan akun staf dealer. Masuk lewat halaman pelanggan.'
-                    : 'Akun ini terdaftar sebagai staf. Masuk lewat Portal Staf.',
-            ]);
-        }
 
         $request->session()->regenerate();
 

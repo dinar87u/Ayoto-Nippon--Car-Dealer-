@@ -44,7 +44,7 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
-    public function test_staf_ditolak_di_portal_pelanggan(): void
+    public function test_staf_login_lewat_portal_pelanggan_langsung_ke_dashboard(): void
     {
         $user = User::factory()->create();
         $user->assignRole(Role::create(['name' => 'sales']));
@@ -54,12 +54,11 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
-        $this->assertGuest();
-        $response->assertRedirect('/login');
-        $response->assertSessionHasErrors('email');
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
     }
 
-    public function test_pelanggan_ditolak_di_portal_staf(): void
+    public function test_pelanggan_login_lewat_portal_staf_langsung_ke_home(): void
     {
         $user = User::factory()->create();
 
@@ -68,9 +67,8 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
-        $this->assertGuest();
-        $response->assertRedirect('/loginadmin');
-        $response->assertSessionHasErrors('email');
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('home', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

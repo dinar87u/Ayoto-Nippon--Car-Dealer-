@@ -1,5 +1,5 @@
-<footer class="site-footer mt-auto">
-    <div class="site-footer__main max-w-[1356px] mx-auto px-6 sm:px-8 lg:px-10 grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12">
+<footer class="site-footer mt-auto w-full">
+    <div class="site-footer__main w-full max-w-[1356px] mx-auto px-6 sm:px-8 lg:px-10 grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12">
         <div class="md:col-span-2 pr-0 md:pr-8">
             <div class="flex items-center gap-3">
                 <img src="{{ asset('images/logo-an.png') }}" alt="Logo Ayoto Nippon" class="h-9 w-9 object-contain">
@@ -39,7 +39,7 @@
         </nav>
     </div>
 
-    <div class="max-w-[1356px] mx-auto px-6 sm:px-8 lg:px-10">
+    <div class="w-full max-w-[1356px] mx-auto px-6 sm:px-8 lg:px-10">
         <div class="site-footer__bottom reveal" data-reveal="up">
             <p>&copy; {{ date('Y') }} PT Ayoto Nippon. Seluruh hak cipta dilindungi undang-undang.</p>
             <p>Standar Transaksi Aman &amp; Otomasi Pemesanan Dealer</p>
