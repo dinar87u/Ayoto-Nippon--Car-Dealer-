@@ -336,15 +336,9 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     @if (($stok[$price->branch_id] ?? 0) > 0)
-                                        @auth
-                                            <a href="{{ route('spk.create') }}" class="inline-flex items-center text-xs font-semibold text-accent hover:text-accent min-h-[44px]">
-                                                Ajukan SPK &rarr;
-                                            </a>
-                                        @else
-                                            <a href="{{ route('spk.guest', ['variant_id' => $variant->id, 'branch_id' => $price->branch_id]) }}" class="inline-flex items-center text-xs font-semibold text-accent hover:text-accent min-h-[44px]">
-                                                Ajukan SPK &rarr;
-                                            </a>
-                                        @endauth
+                                        <a href="{{ route('spk.create', ['variant_id' => $variant->id, 'branch_id' => $price->branch_id]) }}" class="inline-flex items-center text-xs font-semibold text-accent hover:text-accent min-h-[44px]">
+                                            Ajukan SPK &rarr;
+                                        </a>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
@@ -423,17 +417,10 @@
                     </div>
 
                     <div class="hidden lg:flex flex-col gap-2.5 pt-1">
-                        @auth
-                            <a data-cta-spk href="{{ $unitSpk ? route('spk.create', ['unit_id' => $unitSpk->id]) : route('spk.create') }}"
-                               class="w-full py-3.5 px-5 text-center font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center">
-                                Ajukan Pemesanan SPK ↗
-                            </a>
-                        @else
-                            <a data-cta-spk href="{{ route('spk.guest', array_filter(['unit_id' => $unitSpk?->id, 'variant_id' => $variant->id])) }}"
-                               class="w-full py-3.5 px-5 text-center font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center">
-                                Ajukan SPK Tanpa Akun ↗
-                            </a>
-                        @endauth
+                        <a data-cta-spk href="{{ route('spk.create', array_filter(['unit_id' => $unitSpk?->id, 'variant_id' => $variant->id])) }}"
+                           class="w-full py-3.5 px-5 text-center font-bold text-sm text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl shadow-lg shadow-accent/25 transition-all min-h-[48px] flex items-center justify-center">
+                            Ajukan Pemesanan SPK ↗
+                        </a>
 
                         <a data-cta-testdrive href="{{ route('test-drive.create', ['variant_id' => $variant->id]) }}"
                             class="w-full py-3 px-5 text-center font-semibold text-sm text-ink bg-surface border border-line hover:border-accent rounded-xl transition-all min-h-[44px] flex items-center justify-center">
@@ -566,17 +553,10 @@
 
     <!-- Mobile Bottom Fixed Bar -->
     <div class="lg:hidden sticky bottom-0 bg-surface/95 backdrop-blur-xl border-t border-line p-3 flex gap-2 z-30">
-        @auth
-            <a data-cta-spk href="{{ $unitSpk ? route('spk.create', ['unit_id' => $unitSpk->id]) : route('spk.create') }}" 
-               class="flex-1 px-4 py-3 text-center text-sm font-bold text-white bg-accent-strong rounded-xl min-h-[44px] flex items-center justify-center shadow-lg shadow-accent/20">
-                Ajukan SPK
-            </a>
-        @else
-            <a data-cta-spk href="{{ route('spk.guest', array_filter(['unit_id' => $unitSpk?->id, 'variant_id' => $variant->id])) }}"
-               class="flex-1 px-4 py-3 text-center text-sm font-bold text-white bg-accent-strong rounded-xl min-h-[44px] flex items-center justify-center shadow-lg shadow-accent/20">
-                Ajukan SPK
-            </a>
-        @endauth
+        <a data-cta-spk href="{{ route('spk.create', array_filter(['unit_id' => $unitSpk?->id, 'variant_id' => $variant->id])) }}" 
+           class="flex-1 px-4 py-3 text-center text-sm font-bold text-white bg-accent-strong rounded-xl min-h-[44px] flex items-center justify-center shadow-lg shadow-accent/20">
+            Ajukan SPK
+        </a>
         <button type="button" data-simulasi-toggle aria-expanded="false" aria-controls="simulasi" 
             class="px-4 py-3 text-center text-xs font-semibold text-ink bg-surface border border-line rounded-xl min-h-[44px]">
             Simulasi

@@ -17,43 +17,7 @@ class GuestLeadController extends Controller
 {
     public function create(Request $request)
     {
-        $unit = null;
-        $variant = null;
-        $branch = null;
-
-        $unitId = $request->query('unit_id');
-        $variantId = $request->query('variant_id');
-        $branchId = $request->query('branch_id');
-
-        if ($unitId) {
-            $unit = Unit::with(['variant.carModel.brand', 'branch', 'color'])->find($unitId);
-            if (! $unit || $unit->status !== 'Tersedia' || ! $unit->variant->aktif) {
-                $unit = null;
-            } else {
-                $variant = $unit->variant;
-                $branch = $unit->branch;
-                $variantId = (string) $unit->variant_id;
-                $branchId = (string) $unit->branch_id;
-            }
-        }
-
-        if (! $variant && $variantId) {
-            $variant = Variant::with('carModel.brand')->where('aktif', true)->find($variantId);
-        }
-
-        if (! $branch && $branchId) {
-            $branch = Branch::where('aktif', true)->find($branchId);
-        }
-
-        // OTR dari harga resmi cabang tujuan; bila tidak ada, ambil yang termurah.
-        $otr = null;
-        if ($variant) {
-            $otr = $variant->priceLists()
-                ->when($branch, fn ($q) => $q->where('branch_id', $branch->id))
-                ->min('otr');
-        }
-
-        return view('lead.form', compact('unit', 'variant', 'branch', 'otr'));
+        return redirect()->route('spk.create', $request->query());
     }
 
     public function store(Request $request)
