@@ -19,4 +19,24 @@ class Customer extends Model
     {
         return $this->hasMany(Lead::class);
     }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function testDrives(): HasMany
+    {
+        return $this->hasMany(TestDrive::class);
+    }
+
+    public function services(): HasMany
+    {
+        return $this->hasMany(ServiceBooking::class);
+    }
+
+    public function sparepartOrders(): HasMany
+    {
+        return $this->hasMany(SparepartOrder::class);
+    }
 }
