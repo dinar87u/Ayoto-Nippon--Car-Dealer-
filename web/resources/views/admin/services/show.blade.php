@@ -119,7 +119,7 @@
                                                 <td class="py-2.5 ps-3 text-right">
                                                     <form action="{{ route('admin.services.detail.destroy', [$service, $detail]) }}" method="POST" class="inline">
                                                         @csrf @method('DELETE')
-                                                        <button type="submit" class="text-xs font-semibold text-red-600 hover:underline">Hapus</button>
+                                                        <button type="submit" class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline">Hapus</button>
                                                     </form>
                                                 </td>
                                             @endif

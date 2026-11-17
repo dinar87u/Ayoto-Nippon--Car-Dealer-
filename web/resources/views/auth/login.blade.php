@@ -74,7 +74,7 @@
                     </label>
 
                     <button type="submit"
-                        class="w-full py-3.5 px-6 text-sm font-bold text-surface bg-ink hover:bg-black rounded-xl min-h-[48px] transition-all flex items-center justify-center active:scale-[0.99]">
+                        class="w-full py-3.5 px-6 text-sm font-bold text-white bg-accent-strong hover:bg-[#9E0E19] rounded-xl min-h-[48px] shadow-lg shadow-accent/25 transition-all flex items-center justify-center active:scale-[0.99]">
                         {{ $staf ? 'Masuk Portal Staf' : 'Masuk' }}
                     </button>
                 </form>

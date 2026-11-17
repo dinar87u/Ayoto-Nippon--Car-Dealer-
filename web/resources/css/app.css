@@ -27,6 +27,13 @@
 
 [x-cloak] { display: none !important; }
 
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+.dark select,
+.dark textarea {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--ink));
+    border-color: rgb(var(--line));
+}
 .dark input::placeholder,
 .dark textarea::placeholder { color: rgb(var(--muted)); }
 .dark select option { background-color: rgb(var(--surface)); color: rgb(var(--ink)); }
