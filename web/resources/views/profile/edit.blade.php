@@ -4,23 +4,13 @@
     @endphp
 
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
-                    {{ $staf ? (Auth::user()->branch?->nama ?? 'Akun Staf Dealer') : 'Portal Pelanggan Resmi' }}
-                </p>
-                <h1 class="mt-0.5 text-2xl font-extrabold text-ink tracking-tight">
-                    Halo, {{ \Illuminate\Support\Str::before($user->name, ' ') }}
-                </h1>
-            </div>
-
-            @unless ($staf)
-                <div class="flex flex-wrap items-center gap-2">
-                    <a href="{{ route('pesanan.index') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors inline-flex items-center gap-1.5">
-                        Pesanan Saya
-                    </a>
-                </div>
-            @endunless
+        <div>
+            <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
+                {{ $staf ? (Auth::user()->branch?->nama ?? 'Akun Staf Dealer') : 'Portal Pelanggan Resmi' }}
+            </p>
+            <h1 class="mt-0.5 text-2xl font-extrabold text-ink tracking-tight">
+                Halo, {{ \Illuminate\Support\Str::before($user->name, ' ') }}
+            </h1>
         </div>
     </x-slot>
 
