@@ -37,6 +37,10 @@
                         <span x-show="!rail">{{ $label }}</span>
                     </a>
                 @endforeach
+                <a href="{{ route('home') }}" title="Ke Halaman Utama" class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px] text-gray-300 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60">
+                    <svg class="w-5 h-5 shrink-0" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span x-show="!rail">Ke Halaman Utama</span>
+                </a>
             </div>
         </div>
         <div x-data="{ buka: true }">

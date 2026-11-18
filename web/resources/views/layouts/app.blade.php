@@ -42,8 +42,12 @@
                         @endif
                     </div>
                     <span class="flex-1"></span>
-                    <a href="{{ route('home') }}" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line text-xs font-medium text-muted hover:text-ink hover:border-ink/30 transition-colors">
-                        Lihat Web Publik ↗
+                    @php
+                        $isStafBar = Auth::user()?->hasAnyRole(['sales', 'admin-cabang', 'service-advisor', 'mekanik', 'pimpinan', 'superadmin', 'owner']) ?? false;
+                    @endphp
+                    <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line text-xs font-semibold text-ink bg-surface hover:bg-surface-2 hover:border-accent transition-colors">
+                        <svg class="w-4 h-4 text-accent shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        <span>{{ $isStafBar ? 'Lihat Web Publik' : 'Kembali ke Halaman Utama' }}</span>
                     </a>
                     <x-theme-toggle />
                 </div>

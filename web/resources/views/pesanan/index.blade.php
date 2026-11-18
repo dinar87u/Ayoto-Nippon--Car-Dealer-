@@ -12,8 +12,8 @@
                 <a href="{{ route('servis.create') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-surface border border-line text-ink hover:border-accent transition-colors">
                     + Booking Servis
                 </a>
-                <a href="{{ route('profile.edit') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-surface border border-line text-ink hover:border-accent transition-colors">
-                    Dashboard Akun
+                <a href="{{ route('home') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-surface border border-line text-ink hover:border-accent transition-colors inline-flex items-center gap-1.5">
+                    &larr; Ke Halaman Utama
                 </a>
             </div>
         </div>
