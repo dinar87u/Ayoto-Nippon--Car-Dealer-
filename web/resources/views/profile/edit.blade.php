@@ -19,9 +19,6 @@
                     <a href="{{ route('pesanan.index') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors inline-flex items-center gap-1.5">
                         Pesanan Saya
                     </a>
-                    <a href="{{ route('home') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-surface border border-line text-ink hover:border-accent transition-colors inline-flex items-center gap-1.5">
-                        &larr; Ke Halaman Utama
-                    </a>
                 </div>
             @endunless
         </div>
