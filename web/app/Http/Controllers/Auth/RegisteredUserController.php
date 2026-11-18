@@ -41,6 +41,10 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Semua pendaftar adalah customer (akun staff dibuat admin lewat seeder).
+        \Spatie\Permission\Models\Role::findOrCreate('customer', 'web');
+        $user->syncRoles(['customer']);
+
         event(new Registered($user));
 
         Auth::login($user);

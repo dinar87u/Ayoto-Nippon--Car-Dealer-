@@ -25,6 +25,9 @@ class UserSeeder extends Seeder
         $bdg = Branch::where('kode', 'BDG-01')->first() ?? Branch::skip(1)->first() ?? $jkt;
 
         $users = [
+            // Owner (pemilik dealer, akses lintas cabang)
+            ['name' => 'Pemilik Ayoto Nippon', 'email' => 'owner@ayotonippon.com', 'role' => 'owner', 'branch_id' => null],
+
             // Super Admin
             ['name' => 'Super Admin', 'email' => 'admin@ayotonippon.com', 'role' => 'superadmin', 'branch_id' => null],
 

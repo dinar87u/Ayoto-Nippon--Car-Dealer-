@@ -1,14 +1,25 @@
-<x-site-layout judul="Pesanan Saya" robots="noindex, nofollow" deskripsi="Riwayat SPK, test drive, servis, dan order sparepart Anda di Ayoto Nippon.">
-    <x-site-header />
-
-    <div class="w-full px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-        <div class="pb-6 border-b border-line">
-            <p class="text-xs font-semibold tracking-wider text-accent uppercase">Pusat Aktivitas Akun</p>
-            <h1 class="mt-1 text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">Riwayat & Pesanan Saya</h1>
-            <p class="mt-2 text-sm text-muted">
-                Pantau seluruh pengajuan unit kendaraan, pemesanan suku cadang, dan jadwal layanan bengkel Anda.
-            </p>
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Pusat Aktivitas Akun</p>
+                <h1 class="mt-0.5 text-2xl font-extrabold text-ink tracking-tight">Riwayat &amp; Pesanan Saya</h1>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('spk.create') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors">
+                    + Ajukan SPK
+                </a>
+                <a href="{{ route('servis.create') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-surface border border-line text-ink hover:border-accent transition-colors">
+                    + Booking Servis
+                </a>
+                <a href="{{ route('profile.edit') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-surface border border-line text-ink hover:border-accent transition-colors">
+                    Dashboard Akun
+                </a>
+            </div>
         </div>
+    </x-slot>
+
+    <div class="py-6 w-full px-4 sm:px-6 lg:px-8 space-y-6">
 
         <!-- Section 1: SPK -->
         <section aria-labelledby="riwayat-spk" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-xl">
@@ -190,6 +201,4 @@
             </div>
         </section>
     </div>
-
-    <x-site-footer />
-</x-site-layout>
+</x-app-layout>

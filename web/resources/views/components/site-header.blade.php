@@ -42,7 +42,7 @@
                     </a>
                     <span class="text-muted" aria-hidden="true">|</span>
                 @endunless
-                <a href="{{ $staf ? route('dashboard') : route('pesanan.index') }}" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-surface-2 border border-transparent hover:border-accent transition-all min-h-[44px]" aria-label="{{ $staf ? 'Dashboard' : 'Pesanan Saya' }} {{ Auth::user()->name }}">
+                <a href="{{ $staf ? route('dashboard') : route('profile.edit') }}" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-surface-2 border border-transparent hover:border-accent transition-all min-h-[44px]" aria-label="{{ $staf ? 'Dashboard' : 'Profil' }} {{ Auth::user()->name }}">
                     <span class="w-8 h-8 rounded-full bg-gradient-to-br from-accent-strong to-[#9E0E19] text-white font-bold text-xs inline-flex items-center justify-center shrink-0 shadow-sm" aria-hidden="true">{{ strtoupper(collect(explode(' ', Auth::user()->name ?? ''))->map(fn ($p) => mb_substr($p, 0, 1))->take(2)->implode('')) }}</span>
                     <span class="text-sm font-medium text-ink max-w-[140px] truncate">{{ Auth::user()->name }}</span>
                 </a>

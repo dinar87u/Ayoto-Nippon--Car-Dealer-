@@ -6,7 +6,11 @@
             <span x-show="!rail" class="font-bold text-white truncate">Ayoto Nippon</span>
         </div>
     </div>
+    @php
+        $stafNav = Auth::user()?->hasAnyRole(['sales', 'admin-cabang', 'service-advisor', 'mekanik', 'pimpinan', 'superadmin', 'owner']) ?? false;
+    @endphp
     <nav class="sidebar-track flex-1 overflow-y-auto px-3 py-4 space-y-5 text-sm">
+        @if ($stafNav)
         <a href="{{ route('dashboard') }}" title="Dashboard" aria-current="{{ request()->routeIs('dashboard') ? 'page' : 'false' }}" class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 {{ request()->routeIs('dashboard') ? 'bg-white/10 font-semibold text-white' : 'hover:bg-white/10 hover:text-white' }}">
             @if (request()->routeIs('dashboard'))
                 <span class="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#C1121F]"></span>
@@ -14,6 +18,51 @@
             <x-nav-icon name="grid" />
             <span x-show="!rail">Dashboard</span>
         </a>
+        @else
+        <div x-data="{ buka: true }">
+            <button type="button" @click="buka = !buka" :aria-expanded="buka" class="w-full flex items-center justify-between px-3 mb-1 min-h-[44px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60">
+                <span x-show="!rail" class="text-[11px] font-semibold tracking-widest text-gray-400">AKUN SAYA</span>
+                <x-nav-icon name="chevron" class="w-4 h-4 transition-transform" ::class="{ 'rotate-180': buka }" />
+            </button>
+            <div x-show="buka" class="space-y-0.5">
+                @foreach ([
+                    ['profile.edit', 'profile.*', 'Dashboard Akun', 'grid'],
+                    ['pesanan.index', 'pesanan.*', 'Pesanan Saya', 'doc'],
+                ] as [$route, $pola, $label, $ikon])
+                    <a href="{{ route($route) }}" title="{{ $label }}" aria-current="{{ request()->routeIs($pola) ? 'page' : 'false' }}" class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 {{ request()->routeIs($pola) ? 'bg-white/10 font-semibold text-white' : 'hover:bg-white/10 hover:text-white' }}">
+                        @if (request()->routeIs($pola))
+                            <span class="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#C1121F]"></span>
+                        @endif
+                        <x-nav-icon :name="$ikon" />
+                        <span x-show="!rail">{{ $label }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        <div x-data="{ buka: true }">
+            <button type="button" @click="buka = !buka" :aria-expanded="buka" class="w-full flex items-center justify-between px-3 mb-1 min-h-[44px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60">
+                <span x-show="!rail" class="text-[11px] font-semibold tracking-widest text-gray-400">LAYANAN DEALER</span>
+                <x-nav-icon name="chevron" class="w-4 h-4 transition-transform" ::class="{ 'rotate-180': buka }" />
+            </button>
+            <div x-show="buka" class="space-y-0.5">
+                @foreach ([
+                    ['katalog.index', 'katalog.*', 'Katalog Mobil', 'car'],
+                    ['spk.create', 'spk.*', 'Ajukan SPK', 'check'],
+                    ['test-drive.create', 'test-drive.*', 'Booking Test Drive', 'pin'],
+                    ['servis.create', 'servis.*', 'Booking Servis', 'wrench'],
+                    ['sparepart.index', 'sparepart.*', 'Katalog Sparepart', 'box'],
+                ] as [$route, $pola, $label, $ikon])
+                    <a href="{{ route($route) }}" title="{{ $label }}" aria-current="{{ request()->routeIs($pola) ? 'page' : 'false' }}" class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 {{ request()->routeIs($pola) ? 'bg-white/10 font-semibold text-white' : 'hover:bg-white/10 hover:text-white' }}">
+                        @if (request()->routeIs($pola))
+                            <span class="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#C1121F]"></span>
+                        @endif
+                        <x-nav-icon :name="$ikon" />
+                        <span x-show="!rail">{{ $label }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
         @hasanyrole('sales|admin-cabang|pimpinan|superadmin|owner')
             <div x-data="{ buka: true }">
                 <button type="button" @click="buka = !buka" :aria-expanded="buka" class="w-full flex items-center justify-between px-3 mb-1 min-h-[44px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60">

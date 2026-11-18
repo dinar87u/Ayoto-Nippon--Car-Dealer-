@@ -1,11 +1,8 @@
 <section>
     <header>
-        <h2 class="text-lg font-medium text-ink">
-            {{ __('Profile Information') }}
-        </h2>
-
+        <h2 class="text-lg font-bold text-ink">Data Diri</h2>
         <p class="mt-1 text-sm text-muted">
-            {{ __("Update your account's profile information and email address.") }}
+            Nama dan email akun Anda. @unless ($staf ?? false) Lengkapi juga data diri untuk mempercepat pengajuan SPK. @endunless
         </p>
     </header>
 
@@ -13,42 +10,63 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-5">
         @csrf
         @method('patch')
 
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" :value="'Nama Lengkap'" />
             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email')" />
+            <x-input-label for="email" :value="'Email'" />
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <div>
                     <p class="text-sm mt-2 text-ink">
-                        {{ __('Your email address is unverified.') }}
+                        Email Anda belum terverifikasi.
 
                         <button form="send-verification" class="underline text-sm text-muted hover:text-ink rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
+                            Kirim ulang email verifikasi
                         </button>
                     </p>
 
                     @if (session('status') === 'verification-link-sent')
                         <p class="mt-2 font-medium text-sm text-green-600 dark:text-green-400">
-                            {{ __('A new verification link has been sent to your email address.') }}
+                            Tautan verifikasi baru telah dikirim ke email Anda.
                         </p>
                     @endif
                 </div>
             @endif
         </div>
 
+        @unless ($staf ?? false)
+            <div class="pt-4 border-t border-line grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <x-input-label for="telp" :value="__('No. HP / WhatsApp')" />
+                    <x-text-input id="telp" name="telp" type="text" inputmode="numeric" class="mt-1 block w-full tabular-nums" :value="old('telp', $customer?->telp)" placeholder="08xxxxxxxxxx" autocomplete="tel" />
+                    <x-input-error class="mt-2" :messages="$errors->get('telp')" />
+                </div>
+                <div>
+                    <x-input-label for="nik" :value="__('NIK (opsional)')" />
+                    <x-text-input id="nik" name="nik" type="text" inputmode="numeric" maxlength="16" class="mt-1 block w-full tabular-nums" :value="old('nik', $customer?->nik)" placeholder="16 digit sesuai KTP" autocomplete="off" />
+                    <x-input-error class="mt-2" :messages="$errors->get('nik')" />
+                </div>
+                <div class="sm:col-span-2">
+                    <x-input-label for="alamat" :value="__('Alamat')" />
+                    <textarea id="alamat" name="alamat" rows="2" placeholder="Alamat domisili (untuk faktur & dokumen SPK)"
+                        class="mt-1 block w-full rounded-lg border-line text-ink text-sm">{{ old('alamat', $customer?->alamat) }}</textarea>
+                    <x-input-error class="mt-2" :messages="$errors->get('alamat')" />
+                </div>
+            </div>
+        @endunless
+
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button>Simpan</x-primary-button>
 
             @if (session('status') === 'profile-updated')
                 <p
@@ -57,7 +75,7 @@
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
                     class="text-sm text-muted"
-                >{{ __('Saved.') }}</p>
+                >Tersimpan.</p>
             @endif
         </div>
     </form>
