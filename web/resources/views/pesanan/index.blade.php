@@ -159,8 +159,17 @@
                         $totalRincian = (int) $svc->details->sum('subtotal');
                         $biayaTampil = $totalRincian > 0 ? $totalRincian : (int) $svc->estimasi_biaya;
                     @endphp
-                    <div class="px-6 py-5 space-y-4">
-                        <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="relative overflow-hidden px-6 py-5 space-y-4">
+                        @if ($svc->status === 'Selesai' && $svc->details->isEmpty())
+                            <div aria-hidden="true" class="pointer-events-none select-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
+                                <div class="-rotate-12 px-6 py-2 rounded-xl border-[3px] border-red-600/25 dark:border-red-400/25">
+                                    <span class="block font-black text-4xl tracking-[0.28em] text-red-600/20 dark:text-red-400/20 uppercase leading-none">
+                                        LUNAS
+                                    </span>
+                                </div>
+                            </div>
+                        @endif
+                        <div class="relative z-10 flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="font-mono font-extrabold text-sm text-accent">{{ $svc->no_svc }}</span>
@@ -172,15 +181,19 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 @if ($svc->status === 'Selesai')
-                                    <a href="{{ route('servis.invoice', $svc) }}" class="px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors inline-flex items-center">
-                                        Unduh Invoice PDF &rarr;
+                                    <a href="{{ route('servis.invoice', $svc) }}" class="px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors inline-flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                                        </svg>
+                                        <span>Unduh Invoice</span>
                                     </a>
+                                @else
+                                    <x-status-badge :status="$svc->status" />
                                 @endif
-                                <x-status-badge :status="$svc->status" />
                             </div>
                         </div>
 
-                        <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                        <dl class="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                             <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
                                 <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Nomor Rangka (VIN)</dt>
                                 <dd class="mt-1 font-mono font-bold text-ink break-all">{{ $svc->vin ?: '-' }}</dd>
@@ -218,14 +231,23 @@
                         </div>
 
                         @if ($svc->details->isNotEmpty())
-                            <div class="rounded-2xl border border-line overflow-hidden">
-                                <div class="px-4 py-2.5 bg-surface-2/70 border-b border-line flex items-center justify-between">
+                            <div class="relative z-10 rounded-2xl border border-line overflow-hidden bg-surface">
+                                @if ($svc->status === 'Selesai')
+                                    <div aria-hidden="true" class="pointer-events-none select-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
+                                        <div class="-rotate-12 px-5 py-1.5 rounded-lg border-[3px] border-red-600/25 dark:border-red-400/25 ring-1 ring-inset ring-red-600/20 dark:ring-red-400/20">
+                                            <span class="block font-black text-3xl sm:text-4xl tracking-[0.28em] text-red-600/20 dark:text-red-400/20 uppercase leading-none">
+                                                LUNAS
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="relative z-10 px-4 py-2.5 bg-surface-2/60 border-b border-line flex items-center justify-between">
                                     <span class="text-[11px] font-bold uppercase tracking-wider text-muted">Rincian Pekerjaan &amp; Suku Cadang</span>
                                     <span class="text-xs font-extrabold text-ink tabular-nums">Total: Rp {{ number_format($totalRincian, 0, ',', '.') }}</span>
                                 </div>
-                                <div class="overflow-x-auto">
+                                <div class="relative z-10 overflow-x-auto">
                                     <table class="w-full text-xs text-left">
-                                        <thead class="text-[10px] uppercase tracking-wider text-muted border-b border-line bg-surface">
+                                        <thead class="text-[10px] uppercase tracking-wider text-muted border-b border-line">
                                             <tr>
                                                 <th class="px-4 py-2.5 font-semibold">Jenis</th>
                                                 <th class="px-4 py-2.5 font-semibold">Deskripsi</th>
