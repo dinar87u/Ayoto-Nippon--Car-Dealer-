@@ -1,25 +1,57 @@
 <x-app-layout>
+    @php
+        $bagian = $bagian ?? 'semua';
+        $metaBagian = [
+            'semua' => ['Pusat Aktivitas Akun', 'Riwayat & Pesanan Saya'],
+            'spk' => ['Pesanan Saya', 'Surat Pesanan Kendaraan (SPK)'],
+            'test-drive' => ['Pesanan Saya', 'Jadwal Uji Kemudi (Test Drive)'],
+            'servis' => ['Pesanan Saya', 'Booking Servis Berkala'],
+            'sparepart' => ['Pesanan Saya', 'Pesanan Suku Cadang (SPO)'],
+        ];
+        [$subJudul, $judulUtama] = $metaBagian[$bagian] ?? $metaBagian['semua'];
+    @endphp
+
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Pusat Aktivitas Akun</p>
-                <h1 class="mt-0.5 text-2xl font-extrabold text-ink tracking-tight">Riwayat &amp; Pesanan Saya</h1>
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">{{ $subJudul }}</p>
+                <h1 class="mt-0.5 text-2xl font-extrabold text-ink tracking-tight">{{ $judulUtama }}</h1>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('spk.create') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors">
-                    + Ajukan SPK
-                </a>
-                <a href="{{ route('servis.create') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-surface border border-line text-ink hover:border-accent transition-colors">
-                    + Booking Servis
-                </a>
+                @if (in_array($bagian, ['semua', 'spk'], true))
+                    <a href="{{ route('spk.create') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors">
+                        + Ajukan SPK
+                    </a>
+                @endif
+                @if ($bagian === 'test-drive')
+                    <a href="{{ route('test-drive.create') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors">
+                        + Booking Test Drive
+                    </a>
+                @endif
+                @if (in_array($bagian, ['semua', 'servis'], true))
+                    <a href="{{ route('servis.create') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold {{ $bagian === 'servis' ? 'bg-accent-strong text-white hover:bg-[#9E0E19]' : 'bg-surface border border-line text-ink hover:border-accent' }} transition-colors">
+                        + Booking Servis
+                    </a>
+                @endif
+                @if ($bagian === 'sparepart')
+                    <a href="{{ route('sparepart.index') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors">
+                        + Beli Sparepart
+                    </a>
+                @endif
             </div>
         </div>
     </x-slot>
 
     <div class="py-6 w-full px-4 sm:px-6 lg:px-8 space-y-6">
+        @if (session('sukses'))
+            <div class="p-4 text-sm font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                {{ session('sukses') }}
+            </div>
+        @endif
 
+        @if (in_array($bagian, ['semua', 'spk'], true))
         <!-- Section 1: SPK -->
-        <section aria-labelledby="riwayat-spk" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-xl">
+        <section aria-labelledby="riwayat-spk" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 bg-surface border-b border-line flex items-center justify-between">
                 <div>
                     <h2 id="riwayat-spk" class="font-bold text-base text-ink">Surat Pesanan Kendaraan (SPK)</h2>
@@ -62,9 +94,11 @@
                 @endforelse
             </div>
         </section>
+        @endif
 
+        @if (in_array($bagian, ['semua', 'test-drive'], true))
         <!-- Section 2: Test Drive -->
-        <section aria-labelledby="riwayat-td" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-xl">
+        <section aria-labelledby="riwayat-td" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 bg-surface border-b border-line">
                 <h2 id="riwayat-td" class="font-bold text-base text-ink">Jadwal Uji Kemudi (Test Drive)</h2>
                 <p class="text-xs text-muted">Kelola atau ajukan penjadwalan ulang selama status masih aktif.</p>
@@ -108,9 +142,11 @@
                 @endforelse
             </div>
         </section>
+        @endif
 
+        @if (in_array($bagian, ['semua', 'servis'], true))
         <!-- Section 3: Servis -->
-        <section aria-labelledby="riwayat-svc" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-xl">
+        <section aria-labelledby="riwayat-svc" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 bg-surface border-b border-line">
                 <h2 id="riwayat-svc" class="font-bold text-base text-ink">Booking Servis Berkala</h2>
                 <p class="text-xs text-muted">Pantau proses perbaikan dan unduh invoice resmi servis.</p>
@@ -162,9 +198,11 @@
                 @endforelse
             </div>
         </section>
+        @endif
 
+        @if (in_array($bagian, ['semua', 'sparepart'], true))
         <!-- Section 4: Order Sparepart -->
-        <section aria-labelledby="riwayat-spo" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-xl">
+        <section aria-labelledby="riwayat-spo" class="bg-surface border border-line rounded-3xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 bg-surface border-b border-line">
                 <h2 id="riwayat-spo" class="font-bold text-base text-ink">Pesanan Suku Cadang (SPO)</h2>
                 <p class="text-xs text-muted">Riwayat transaksi pembelian suku cadang asli dealer.</p>
@@ -197,5 +235,6 @@
                 @endforelse
             </div>
         </section>
+        @endif
     </div>
 </x-app-layout>

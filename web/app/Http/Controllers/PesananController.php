@@ -23,16 +23,50 @@ class PesananController extends Controller
         return Customer::where('user_id', $request->user()->id)->pluck('id')->all();
     }
 
-    public function index(Request $request): View
+    private function renderBagian(Request $request, string $bagian): View
     {
         $ids = $this->idCustomerSaya($request);
 
         return view('pesanan.index', [
-            'spks' => $ids ? Order::with(['unit.variant.carModel.brand', 'branch', 'invoice'])->whereIn('customer_id', $ids)->latest()->get() : collect(),
-            'testDrives' => $ids ? TestDrive::with(['variant.carModel.brand', 'branch', 'color'])->whereIn('customer_id', $ids)->orderBy('jadwal')->get() : collect(),
-            'servis' => $ids ? ServiceBooking::with('branch')->whereIn('customer_id', $ids)->orderBy('jadwal')->get() : collect(),
-            'spos' => $ids ? SparepartOrder::with('branch')->whereIn('customer_id', $ids)->latest()->get() : collect(),
+            'bagian' => $bagian,
+            'spks' => ($ids && in_array($bagian, ['semua', 'spk'], true))
+                ? Order::with(['unit.variant.carModel.brand', 'branch', 'invoice'])->whereIn('customer_id', $ids)->latest()->get()
+                : collect(),
+            'testDrives' => ($ids && in_array($bagian, ['semua', 'test-drive'], true))
+                ? TestDrive::with(['variant.carModel.brand', 'branch', 'color'])->whereIn('customer_id', $ids)->orderBy('jadwal')->get()
+                : collect(),
+            'servis' => ($ids && in_array($bagian, ['semua', 'servis'], true))
+                ? ServiceBooking::with('branch')->whereIn('customer_id', $ids)->orderBy('jadwal')->get()
+                : collect(),
+            'spos' => ($ids && in_array($bagian, ['semua', 'sparepart'], true))
+                ? SparepartOrder::with('branch')->whereIn('customer_id', $ids)->latest()->get()
+                : collect(),
         ]);
+    }
+
+    public function index(Request $request): View
+    {
+        return $this->renderBagian($request, 'semua');
+    }
+
+    public function spk(Request $request): View
+    {
+        return $this->renderBagian($request, 'spk');
+    }
+
+    public function testDrive(Request $request): View
+    {
+        return $this->renderBagian($request, 'test-drive');
+    }
+
+    public function servis(Request $request): View
+    {
+        return $this->renderBagian($request, 'servis');
+    }
+
+    public function sparepart(Request $request): View
+    {
+        return $this->renderBagian($request, 'sparepart');
     }
 
     public function batalTestDrive(Request $request, TestDrive $testDrive): RedirectResponse

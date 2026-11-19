@@ -35,7 +35,7 @@
             <x-theme-toggle />
             @auth
                 @unless ($staf)
-                    <a href="{{ route('pesanan.index') }}"
+                    <a href="{{ route('pesanan.spk') }}"
                        @if (request()->routeIs('pesanan.*')) aria-current="page" @endif
                        class="nav-underline-link py-1.5 text-sm font-medium transition-colors min-h-[40px] inline-flex items-center whitespace-nowrap {{ request()->routeIs('pesanan.*') ? 'is-active text-accent font-semibold' : 'text-muted hover:text-accent' }}">
                         Pesanan Saya
@@ -84,7 +84,7 @@
         <div class="pt-3">
             @auth
                 @unless ($staf)
-                    <a href="{{ route('pesanan.index') }}" class="block px-3 py-2.5 text-sm font-medium text-ink hover:text-accent hover:bg-surface-2 rounded-xl min-h-[44px] flex items-center">Pesanan Saya</a>
+                    <a href="{{ route('pesanan.spk') }}" class="block px-3 py-2.5 text-sm font-medium text-ink hover:text-accent hover:bg-surface-2 rounded-xl min-h-[44px] flex items-center">Pesanan Saya</a>
                 @endunless
                 <a href="{{ $staf ? route('dashboard') : route('profile.edit') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-2 min-h-[44px]">
                     <span class="w-8 h-8 rounded-full bg-gradient-to-br from-accent-strong to-[#9E0E19] text-white font-bold text-xs inline-flex items-center justify-center shrink-0" aria-hidden="true">{{ strtoupper(collect(explode(' ', Auth::user()->name ?? ''))->map(fn ($p) => mb_substr($p, 0, 1))->take(2)->implode('')) }}</span>

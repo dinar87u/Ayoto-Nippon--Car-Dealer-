@@ -30,25 +30,25 @@
             @if ($aktivitas)
                 <!-- KPI Aktivitas Pelanggan -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <a href="{{ route('pesanan.index') }}#riwayat-spk" class="bg-surface p-5 rounded-2xl border border-line border-l-4 border-l-accent hover:border-accent transition-all">
+                    <a href="{{ route('pesanan.spk') }}" class="bg-surface p-5 rounded-2xl border border-line border-l-4 border-l-accent hover:border-accent transition-all">
                         <p class="text-xs font-semibold uppercase tracking-wider text-muted">Pengajuan SPK</p>
                         <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['spk'], 0, ',', '.') }}</p>
                         <p class="mt-1 text-xs text-muted">Surat Pesanan Kendaraan</p>
                     </a>
 
-                    <a href="{{ route('pesanan.index') }}#riwayat-td" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
+                    <a href="{{ route('pesanan.test-drive') }}" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
                         <p class="text-xs font-semibold uppercase tracking-wider text-muted">Booking Test Drive</p>
                         <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['testDrive'], 0, ',', '.') }}</p>
                         <p class="mt-1 text-xs text-muted">Jadwal uji kemudi unit</p>
                     </a>
 
-                    <a href="{{ route('pesanan.index') }}#riwayat-svc" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
+                    <a href="{{ route('pesanan.servis') }}" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
                         <p class="text-xs font-semibold uppercase tracking-wider text-muted">Booking Servis</p>
                         <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['servis'], 0, ',', '.') }}</p>
                         <p class="mt-1 text-xs text-muted">Perawatan berkala bengkel</p>
                     </a>
 
-                    <a href="{{ route('pesanan.index') }}#riwayat-spo" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
+                    <a href="{{ route('pesanan.sparepart') }}" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
                         <p class="text-xs font-semibold uppercase tracking-wider text-muted">Order Sparepart</p>
                         <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['sparepart'], 0, ',', '.') }}</p>
                         <p class="mt-1 text-xs text-muted">Pembelian suku cadang asli</p>
@@ -214,7 +214,7 @@
                                 </div>
 
                                 <div class="pt-1 flex flex-wrap items-center justify-between gap-3">
-                                    <a href="{{ route('pesanan.index') }}#riwayat-svc" class="text-xs font-semibold text-accent hover:underline">
+                                    <a href="{{ route('pesanan.servis') }}" class="text-xs font-semibold text-accent hover:underline">
                                         Lihat Semua Riwayat Servis &rarr;
                                     </a>
                                     @if ($servisTerakhir->status === 'Selesai')

@@ -56,6 +56,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/sparepart/{sparepart}/pesan', [SparepartController::class, 'pesan'])->name('sparepart.pesan');
 
     Route::get('/pesanan-saya', [PesananController::class, 'index'])->name('pesanan.index');
+    Route::get('/pesanan-saya/spk', [PesananController::class, 'spk'])->name('pesanan.spk');
+    Route::get('/pesanan-saya/test-drive', [PesananController::class, 'testDrive'])->name('pesanan.test-drive');
+    Route::get('/pesanan-saya/servis', [PesananController::class, 'servis'])->name('pesanan.servis');
+    Route::get('/pesanan-saya/sparepart', [PesananController::class, 'sparepart'])->name('pesanan.sparepart');
     Route::patch('/pesanan-saya/test-drive/{testDrive}/batal', [PesananController::class, 'batalTestDrive'])->name('pesanan.test-drive.batal');
     Route::patch('/pesanan-saya/test-drive/{testDrive}/jadwal', [PesananController::class, 'jadwalTestDrive'])->name('pesanan.test-drive.jadwal');
     Route::patch('/pesanan-saya/servis/{service}/batal', [PesananController::class, 'batalServis'])->name('pesanan.servis.batal');
