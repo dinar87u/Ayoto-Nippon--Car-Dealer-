@@ -164,64 +164,27 @@
                         </div>
 
                         @if ($servisTerakhir)
-                            <div class="p-6 space-y-4">
+                            <div class="p-6 space-y-5">
                                 <div class="flex items-start justify-between gap-3">
                                     <div>
-                                        <span class="font-mono text-sm font-extrabold text-accent">{{ $servisTerakhir->no_svc }}</span>
-                                        <p class="mt-0.5 text-base font-bold text-ink">
-                                            {{ $servisTerakhir->jadwal->format('d M Y, H:i') }} WIB
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider text-muted">Terakhir Servis</p>
+                                        <p class="mt-1.5 text-xl font-extrabold text-ink tabular-nums">
+                                            {{ $servisTerakhir->jadwal->locale('id')->translatedFormat('d F Y') }}
                                         </p>
-                                        <p class="text-xs text-muted">
-                                            {{ $servisTerakhir->jadwal->diffForHumans() }} &middot; Cabang {{ $servisTerakhir->branch?->nama ?? '-' }}
+                                        <p class="mt-0.5 text-sm font-semibold text-muted tabular-nums">
+                                            Pukul {{ $servisTerakhir->jadwal->format('H:i') }} WIB &middot; {{ $servisTerakhir->jadwal->locale('id')->diffForHumans() }}
+                                        </p>
+                                        <p class="mt-1.5 text-xs text-muted">
+                                            {{ $servisTerakhir->branch?->nama ?? 'Bengkel Resmi Ayoto Nippon' }}
                                         </p>
                                     </div>
                                     <x-status-badge :status="$servisTerakhir->status" />
                                 </div>
 
-                                <dl class="grid grid-cols-2 gap-3 text-xs">
-                                    <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
-                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Nomor Polisi</dt>
-                                        <dd class="mt-1 font-mono font-extrabold text-sm text-ink">{{ $servisTerakhir->nopol ?: '-' }}</dd>
-                                    </div>
-                                    <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
-                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Odometer Saat Servis</dt>
-                                        <dd class="mt-1 font-extrabold text-sm text-ink tabular-nums">{{ number_format($servisTerakhir->km, 0, ',', '.') }} km</dd>
-                                    </div>
-                                    <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
-                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Mekanik Penanggung Jawab</dt>
-                                        <dd class="mt-1 font-bold text-ink">{{ $servisTerakhir->mekanik?->name ?? 'Menunggu Penugasan' }}</dd>
-                                    </div>
-                                    <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
-                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Biaya / Estimasi</dt>
-                                        <dd class="mt-1 font-bold text-ink tabular-nums">
-                                            @php
-                                                $biayaSvc = $servisTerakhir->details->sum('subtotal') ?: $servisTerakhir->estimasi_biaya;
-                                            @endphp
-                                            {{ $biayaSvc > 0 ? 'Rp ' . number_format($biayaSvc, 0, ',', '.') : 'Menunggu Estimasi' }}
-                                        </dd>
-                                    </div>
-                                </dl>
-
-                                <div class="p-3.5 rounded-xl bg-surface-2/40 border border-line text-xs space-y-1.5">
-                                    <span class="block text-[10px] font-semibold uppercase tracking-wider text-muted">Keluhan / Catatan Servis</span>
-                                    <p class="text-ink font-medium leading-relaxed">{{ $servisTerakhir->keluhan ?: '-' }}</p>
-                                    @if ($servisTerakhir->tanggapan)
-                                        <div class="pt-2 mt-2 border-t border-line">
-                                            <span class="block text-[10px] font-semibold uppercase tracking-wider text-accent">Catatan Bengkel / Service Advisor</span>
-                                            <p class="mt-0.5 text-ink">{{ $servisTerakhir->tanggapan }}</p>
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <div class="pt-1 flex flex-wrap items-center justify-between gap-3">
+                                <div class="pt-4 border-t border-line flex items-center justify-between gap-3">
                                     <a href="{{ route('pesanan.servis') }}" class="text-xs font-semibold text-accent hover:underline">
-                                        Lihat Semua Riwayat Servis &rarr;
+                                        Lihat Detail Riwayat Servis &rarr;
                                     </a>
-                                    @if ($servisTerakhir->status === 'Selesai')
-                                        <a href="{{ route('servis.invoice', $servisTerakhir) }}" class="px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors">
-                                            Unduh Invoice PDF
-                                        </a>
-                                    @endif
                                 </div>
                             </div>
                         @else
