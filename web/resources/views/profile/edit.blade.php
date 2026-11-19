@@ -231,38 +231,6 @@
                             </div>
                         @endif
                     </section>
-
-                    <!-- Ringkasan Profil Singkat + Pintasan ke Menu Data Diri -->
-                    <section aria-labelledby="judul-ringkasan-profil" class="bg-surface rounded-2xl border border-line shadow-sm p-6 space-y-4">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <p class="text-[11px] font-bold uppercase tracking-wider text-muted">Identitas Pemilik</p>
-                                <h2 id="judul-ringkasan-profil" class="text-base font-bold text-ink">Data Diri Terdaftar</h2>
-                            </div>
-                            <a href="{{ route('profile.data-diri') }}" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-ink bg-surface-2 border border-line hover:border-accent transition-colors">
-                                Ubah Data Diri &rarr;
-                            </a>
-                        </div>
-
-                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                            <div>
-                                <dt class="text-muted">Nama Lengkap</dt>
-                                <dd class="mt-0.5 font-bold text-ink">{{ $user->name }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-muted">Email</dt>
-                                <dd class="mt-0.5 font-bold text-ink truncate">{{ $user->email }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-muted">No. HP / WhatsApp</dt>
-                                <dd class="mt-0.5 font-bold text-ink tabular-nums">{{ $customer?->telp ?: 'Belum diisi' }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-muted">NIK KTP</dt>
-                                <dd class="mt-0.5 font-mono font-bold text-ink tabular-nums">{{ $customer?->nik ?: 'Belum diisi' }}</dd>
-                            </div>
-                        </dl>
-                    </section>
                 </div>
             </div>
         @endif
