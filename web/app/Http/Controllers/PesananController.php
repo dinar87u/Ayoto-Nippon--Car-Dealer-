@@ -36,7 +36,7 @@ class PesananController extends Controller
                 ? TestDrive::with(['variant.carModel.brand', 'branch', 'color'])->whereIn('customer_id', $ids)->orderBy('jadwal')->get()
                 : collect(),
             'servis' => ($ids && in_array($bagian, ['semua', 'servis'], true))
-                ? ServiceBooking::with('branch')->whereIn('customer_id', $ids)->orderBy('jadwal')->get()
+                ? ServiceBooking::with(['branch', 'mekanik', 'details'])->whereIn('customer_id', $ids)->orderByDesc('jadwal')->get()
                 : collect(),
             'spos' => ($ids && in_array($bagian, ['semua', 'sparepart'], true))
                 ? SparepartOrder::with('branch')->whereIn('customer_id', $ids)->latest()->get()

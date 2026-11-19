@@ -4,8 +4,8 @@
         $metaBagian = [
             'semua' => ['Pusat Aktivitas Akun', 'Riwayat & Pesanan Saya'],
             'spk' => ['Pesanan Saya', 'Surat Pesanan Kendaraan (SPK)'],
-            'test-drive' => ['Pesanan Saya', 'Jadwal Uji Kemudi (Test Drive)'],
-            'servis' => ['Pesanan Saya', 'Booking Servis Berkala'],
+            'test-drive' => [null, 'Jadwal Uji Kemudi (Test Drive)'],
+            'servis' => [null, 'Booking Servis Berkala'],
             'sparepart' => ['Pesanan Saya', 'Pesanan Suku Cadang (SPO)'],
         ];
         [$subJudul, $judulUtama] = $metaBagian[$bagian] ?? $metaBagian['semua'];
@@ -14,8 +14,10 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">{{ $subJudul }}</p>
-                <h1 class="mt-0.5 text-2xl font-extrabold text-ink tracking-tight">{{ $judulUtama }}</h1>
+                @if ($subJudul)
+                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">{{ $subJudul }}</p>
+                @endif
+                <h1 class="{{ $subJudul ? 'mt-0.5 ' : '' }}text-2xl font-extrabold text-ink tracking-tight">{{ $judulUtama }}</h1>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 @if (in_array($bagian, ['semua', 'spk'], true))
@@ -153,22 +155,100 @@
             </div>
             <div class="divide-y divide-line">
                 @forelse ($servis as $svc)
-                    <div class="px-6 py-5 space-y-3">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
+                    @php
+                        $totalRincian = (int) $svc->details->sum('subtotal');
+                        $biayaTampil = $totalRincian > 0 ? $totalRincian : (int) $svc->estimasi_biaya;
+                    @endphp
+                    <div class="px-6 py-5 space-y-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
-                                <span class="font-mono font-bold text-sm text-ink">{{ $svc->no_svc }}</span>
-                                <span class="text-xs text-muted font-mono ms-2 px-2 py-0.5 bg-surface border border-line rounded-md">{{ $svc->nopol }}</span>
-                                <p class="text-xs text-muted mt-1 tabular-nums">{{ $svc->jadwal->format('d M Y H:i') }} WIB - Cabang {{ $svc->branch->nama }}</p>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-mono font-extrabold text-sm text-accent">{{ $svc->no_svc }}</span>
+                                    <span class="text-xs text-ink font-mono font-bold px-2.5 py-0.5 bg-surface-2 border border-line rounded-md">{{ $svc->nopol }}</span>
+                                </div>
+                                <p class="text-xs text-muted mt-1.5 tabular-nums">
+                                    {{ $svc->jadwal->locale('id')->translatedFormat('d F Y, H:i') }} WIB &middot; Cabang {{ $svc->branch?->nama ?? '-' }}
+                                </p>
                             </div>
                             <div class="flex items-center gap-3">
                                 @if ($svc->status === 'Selesai')
-                                    <a href="{{ route('servis.invoice', $svc) }}" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:underline min-h-[44px] inline-flex items-center">
+                                    <a href="{{ route('servis.invoice', $svc) }}" class="px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors inline-flex items-center">
                                         Unduh Invoice PDF &rarr;
                                     </a>
                                 @endif
                                 <x-status-badge :status="$svc->status" />
                             </div>
                         </div>
+
+                        <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                            <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Nomor Rangka (VIN)</dt>
+                                <dd class="mt-1 font-mono font-bold text-ink break-all">{{ $svc->vin ?: '-' }}</dd>
+                            </div>
+                            <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Odometer Saat Servis</dt>
+                                <dd class="mt-1 font-bold text-ink tabular-nums">{{ number_format($svc->km, 0, ',', '.') }} km</dd>
+                            </div>
+                            <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Mekanik Penanggung Jawab</dt>
+                                <dd class="mt-1 font-bold text-ink">{{ $svc->mekanik?->name ?? 'Menunggu Penugasan' }}</dd>
+                            </div>
+                            <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Biaya / Estimasi</dt>
+                                <dd class="mt-1 font-bold text-ink tabular-nums">
+                                    {{ $biayaTampil > 0 ? 'Rp ' . number_format($biayaTampil, 0, ',', '.') : 'Menunggu Estimasi' }}
+                                    @if ($svc->metode_bayar)
+                                        <span class="block text-[11px] font-medium text-muted mt-0.5">Bayar: {{ $svc->metode_bayar }}</span>
+                                    @endif
+                                </dd>
+                            </div>
+                        </dl>
+
+                        <div class="grid grid-cols-1 {{ $svc->tanggapan ? 'md:grid-cols-2' : '' }} gap-3 text-xs">
+                            <div class="p-3.5 rounded-xl bg-surface-2/40 border border-line space-y-1">
+                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-muted">Keluhan / Permintaan Servis</span>
+                                <p class="text-ink font-medium leading-relaxed">{{ $svc->keluhan ?: 'Servis berkala rutin.' }}</p>
+                            </div>
+                            @if ($svc->tanggapan)
+                                <div class="p-3.5 rounded-xl bg-surface-2/40 border border-line space-y-1">
+                                    <span class="block text-[10px] font-semibold uppercase tracking-wider text-muted">Catatan / Tanggapan Bengkel</span>
+                                    <p class="text-ink font-medium leading-relaxed">{{ $svc->tanggapan }}</p>
+                                </div>
+                            @endif
+                        </div>
+
+                        @if ($svc->details->isNotEmpty())
+                            <div class="rounded-2xl border border-line overflow-hidden">
+                                <div class="px-4 py-2.5 bg-surface-2/70 border-b border-line flex items-center justify-between">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-muted">Rincian Pekerjaan &amp; Suku Cadang</span>
+                                    <span class="text-xs font-extrabold text-ink tabular-nums">Total: Rp {{ number_format($totalRincian, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="text-[10px] uppercase tracking-wider text-muted border-b border-line bg-surface">
+                                            <tr>
+                                                <th class="px-4 py-2.5 font-semibold">Jenis</th>
+                                                <th class="px-4 py-2.5 font-semibold">Deskripsi</th>
+                                                <th class="px-4 py-2.5 font-semibold text-right">Qty</th>
+                                                <th class="px-4 py-2.5 font-semibold text-right">Harga Satuan</th>
+                                                <th class="px-4 py-2.5 font-semibold text-right">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-line">
+                                            @foreach ($svc->details as $item)
+                                                <tr>
+                                                    <td class="px-4 py-2.5 font-semibold text-muted">{{ $item->jenis }}</td>
+                                                    <td class="px-4 py-2.5 font-medium text-ink">{{ $item->deskripsi }}</td>
+                                                    <td class="px-4 py-2.5 text-right tabular-nums text-ink">{{ $item->qty }}</td>
+                                                    <td class="px-4 py-2.5 text-right tabular-nums text-muted">Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
+                                                    <td class="px-4 py-2.5 text-right tabular-nums font-bold text-ink">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
 
                         @if (in_array($svc->status, ['Menunggu', 'Dikonfirmasi'], true))
                             <div class="pt-3 border-t border-line flex flex-wrap items-center gap-3">
