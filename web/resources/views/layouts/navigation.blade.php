@@ -19,26 +19,13 @@
             <span x-show="!rail">Dashboard</span>
         </a>
         @else
-        <div x-data="{ buka: true }">
-            <button type="button" @click="buka = !buka" :aria-expanded="buka" class="w-full flex items-center justify-between px-3 mb-1 min-h-[44px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60">
-                <span x-show="!rail" class="text-[11px] font-semibold tracking-widest text-gray-400">AKUN SAYA</span>
-                <x-nav-icon name="chevron" class="w-4 h-4 transition-transform" ::class="{ 'rotate-180': buka }" />
-            </button>
-            <div x-show="buka" class="space-y-0.5">
-                @foreach ([
-                    ['profile.edit', 'profile.edit', 'Dashboard Akun', 'grid'],
-                    ['profile.data-diri', 'profile.data-diri', 'Data Diri', 'user'],
-                ] as [$route, $pola, $label, $ikon])
-                    <a href="{{ route($route) }}" title="{{ $label }}" aria-current="{{ request()->routeIs($pola) ? 'page' : 'false' }}" class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 {{ request()->routeIs($pola) ? 'bg-white/10 font-semibold text-white' : 'hover:bg-white/10 hover:text-white' }}">
-                        @if (request()->routeIs($pola))
-                            <span class="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#C1121F]"></span>
-                        @endif
-                        <x-nav-icon :name="$ikon" />
-                        <span x-show="!rail">{{ $label }}</span>
-                    </a>
-                @endforeach
-            </div>
-        </div>
+        <a href="{{ route('profile.edit') }}" title="Dashboard Akun" aria-current="{{ request()->routeIs('profile.edit') ? 'page' : 'false' }}" class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 {{ request()->routeIs('profile.edit') ? 'bg-white/10 font-semibold text-white' : 'hover:bg-white/10 hover:text-white' }}">
+            @if (request()->routeIs('profile.edit'))
+                <span class="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#C1121F]"></span>
+            @endif
+            <x-nav-icon name="grid" />
+            <span x-show="!rail">Dashboard Akun</span>
+        </a>
         <div x-data="{ buka: true }">
             <button type="button" @click="buka = !buka" :aria-expanded="buka" class="w-full flex items-center justify-between px-3 mb-1 min-h-[44px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60">
                 <span x-show="!rail" class="text-[11px] font-semibold tracking-widest text-gray-400">PESANAN SAYA</span>
@@ -60,6 +47,15 @@
                     </a>
                 @endforeach
             </div>
+        </div>
+        <div class="pt-3 border-t border-white/10">
+            <a href="{{ route('profile.data-diri') }}" title="Data Diri" aria-current="{{ request()->routeIs('profile.data-diri') ? 'page' : 'false' }}" class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 {{ request()->routeIs('profile.data-diri') ? 'bg-white/10 font-semibold text-white' : 'hover:bg-white/10 hover:text-white' }}">
+                @if (request()->routeIs('profile.data-diri'))
+                    <span class="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#C1121F]"></span>
+                @endif
+                <x-nav-icon name="user" />
+                <span x-show="!rail">Data Diri</span>
+            </a>
         </div>
         @endif
         @hasanyrole('sales|admin-cabang|pimpinan|superadmin|owner')
