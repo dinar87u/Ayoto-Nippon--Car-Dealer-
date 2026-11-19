@@ -18,12 +18,24 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-ink antialiased bg-surface-2/40 dark:bg-surface">
-        <div class="min-h-screen lg:flex" x-data="{ open: window.matchMedia('(min-width: 1024px)').matches, rail: false }">
+        <div class="min-h-screen lg:flex" x-data="{
+            open: false,
+            rail: (() => { try { return window.matchMedia('(min-width: 1024px)').matches && localStorage.getItem('ayoto-sidebar-rail') === '1'; } catch (e) { return false; } })(),
+            toggleSidebar() {
+                if (window.matchMedia('(min-width: 1024px)').matches) {
+                    this.rail = !this.rail;
+                    try { localStorage.setItem('ayoto-sidebar-rail', this.rail ? '1' : '0'); } catch (e) {}
+                } else {
+                    this.rail = false;
+                    this.open = !this.open;
+                }
+            }
+        }" @resize.window="if (window.matchMedia('(min-width: 1024px)').matches) { open = false; } else { rail = false; }">
             @include('layouts.navigation')
 
             <div class="flex-1 min-w-0 flex flex-col">
                 <div class="bg-surface/95 backdrop-blur-md border-b border-line px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-3 sticky top-0 z-30">
-                    <button type="button" @click="window.matchMedia('(min-width: 1024px)').matches ? rail = !rail : open = !open" aria-label="Menu" :aria-expanded="open" class="p-2 -ml-2 rounded-lg text-ink hover:bg-surface-2 min-w-[40px] min-h-[40px] inline-flex items-center justify-center transition-colors">
+                    <button type="button" @click="toggleSidebar()" aria-label="Menu" :aria-expanded="window.matchMedia('(min-width: 1024px)').matches ? !rail : open" class="p-2 -ml-2 rounded-lg text-ink hover:bg-surface-2 min-w-[40px] min-h-[40px] inline-flex items-center justify-center transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
