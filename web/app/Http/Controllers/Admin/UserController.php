@@ -14,6 +14,22 @@ class UserController extends Controller
 {
     private const ROLE_WAJIB_CABANG = ['pimpinan', 'admin-cabang', 'sales', 'service-advisor', 'mekanik'];
 
+    private const URUTAN_ROLE = [
+        'superadmin' => 1,
+        'owner' => 2,
+        'pimpinan' => 3,
+        'admin-cabang' => 4,
+        'sales' => 5,
+        'service-advisor' => 6,
+        'mekanik' => 7,
+        'customer' => 8,
+    ];
+
+    private function rolesTerurut()
+    {
+        return Role::all()->sortBy(fn ($r) => self::URUTAN_ROLE[$r->name] ?? 99)->values();
+    }
+
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -21,6 +37,20 @@ class UserController extends Controller
             'role' => ['nullable', 'string', 'max:40'],
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
         ]);
+
+        $roleOrderSql = "(SELECT MIN(CASE roles.name
+            WHEN 'superadmin' THEN 1
+            WHEN 'owner' THEN 2
+            WHEN 'pimpinan' THEN 3
+            WHEN 'admin-cabang' THEN 4
+            WHEN 'sales' THEN 5
+            WHEN 'service-advisor' THEN 6
+            WHEN 'mekanik' THEN 7
+            WHEN 'customer' THEN 8
+            ELSE 9 END)
+            FROM model_has_roles
+            JOIN roles ON roles.id = model_has_roles.role_id
+            WHERE model_has_roles.model_id = users.id)";
 
         $users = User::with(['roles', 'branch'])
             ->when($validated['q'] ?? null, function ($query, $s) {
@@ -39,12 +69,12 @@ class UserController extends Controller
                 }
             })
             ->when($validated['branch_id'] ?? null, fn ($query, $bid) => $query->where('branch_id', $bid))
-            ->orderByRaw('branch_id is null desc')
+            ->orderByRaw("COALESCE({$roleOrderSql}, 8) ASC")
             ->orderBy('name')
             ->paginate(15)
             ->withQueryString();
 
-        $roles = Role::orderBy('name')->get();
+        $roles = $this->rolesTerurut();
         $branches = Branch::where('aktif', true)->orderBy('nama')->get();
         $ringkasan = [
             'total' => User::count(),
@@ -59,7 +89,7 @@ class UserController extends Controller
     {
         return view('admin.users.form', [
             'user' => new User(),
-            'roles' => Role::orderBy('name')->get(),
+            'roles' => $this->rolesTerurut(),
             'branches' => Branch::where('aktif', true)->orderBy('nama')->get(),
         ]);
     }
@@ -95,7 +125,7 @@ class UserController extends Controller
     {
         return view('admin.users.form', [
             'user' => $user,
-            'roles' => Role::orderBy('name')->get(),
+            'roles' => $this->rolesTerurut(),
             'branches' => Branch::where('aktif', true)->orderBy('nama')->get(),
         ]);
     }
