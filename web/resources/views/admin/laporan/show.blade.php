@@ -8,7 +8,7 @@
             'komisi' => 'Komisi Sales',
         ];
     @endphp
-    <x-slot name="header"><h2 class="font-semibold text-xl text-ink leading-tight">Laporan — {{ $tabs[$jenis] ?? ucfirst($jenis) }}</h2></x-slot>
+    <x-slot name="header"><h2 class="font-semibold text-xl text-ink leading-tight">Laporan: {{ $tabs[$jenis] ?? ucfirst($jenis) }}</h2></x-slot>
     <div class="py-6 w-full sm:px-6 lg:px-8 space-y-5">
         <div class="flex flex-wrap items-center gap-2 border-b border-line pb-3">
             @foreach ($tabs as $tabKey => $tabLabel)

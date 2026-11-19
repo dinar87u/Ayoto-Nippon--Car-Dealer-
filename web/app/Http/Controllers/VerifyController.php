@@ -22,7 +22,7 @@ class VerifyController extends Controller
             ->orderBy('updated_at')
             ->paginate(15);
 
-        // SPK yang sudah diterbitkan tapi belum ada bukti bayar — agar admin tahu
+        // SPK yang sudah diterbitkan tapi belum ada bukti bayar, agar admin tahu
         // kenapa antrean bisa kosong dan bisa mengejar pembeli via WA.
         $menungguBayar = Order::with(['customer', 'unit.variant.carModel.brand', 'branch'])
             ->where('status', 'MenungguBayar')

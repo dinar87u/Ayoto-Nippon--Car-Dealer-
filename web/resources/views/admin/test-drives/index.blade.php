@@ -3,7 +3,7 @@
 
     <div class="py-6 w-full sm:px-6 lg:px-8">
         <p class="mb-4 text-sm text-muted max-w-3xl">
-            Pengajuan test drive dari website — termasuk yang masuk tanpa akun. Ubah status untuk mengonfirmasi:
+            Pengajuan test drive dari website, termasuk yang masuk tanpa akun. Ubah status untuk mengonfirmasi:
             <strong class="text-ink">Dikonfirmasi</strong> otomatis mengirim WhatsApp jadwal ke pembeli.
         </p>
 

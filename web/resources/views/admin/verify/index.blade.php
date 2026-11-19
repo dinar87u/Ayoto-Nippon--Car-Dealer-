@@ -146,7 +146,7 @@
                                     <label class="flex items-start gap-3 p-3 rounded-xl border border-line bg-surface cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:ring-1 has-[:checked]:ring-emerald-500 transition">
                                         <input type="radio" name="keputusan" value="terima" @change="keputusan = 'terima'" class="mt-1 min-w-[18px] min-h-[18px]">
                                         <span>
-                                            <strong class="text-sm text-ink">Terima — jadikan Deal</strong>
+                                            <strong class="text-sm text-ink">Terima, jadikan Deal</strong>
                                             <span class="block text-xs text-muted mt-0.5">Unit jadi Terjual, invoice & PDF dibuat, pembeli di-WA otomatis.</span>
                                         </span>
                                     </label>
@@ -195,7 +195,7 @@
                     </div>
                 @else
                     <div class="p-5">
-                        <p class="text-xs text-muted mb-3">SPK ini sudah diterbitkan tapi belum ada bukti bayar, jadi belum bisa diputuskan. Kirim pengingat — akan pindah sendiri ke tab <strong>Perlu Keputusan</strong> setelah pembeli meng-upload bukti.</p>
+                        <p class="text-xs text-muted mb-3">SPK ini sudah diterbitkan tapi belum ada bukti bayar, jadi belum bisa diputuskan. Kirim pengingat agar data berpindah otomatis ke tab <strong>Perlu Keputusan</strong> setelah pembeli meng-upload bukti.</p>
                         <div class="overflow-x-auto ring-1 ring-line rounded-xl">
 <table class="w-full text-sm">
                         <thead>

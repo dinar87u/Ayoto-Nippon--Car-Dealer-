@@ -5,7 +5,7 @@
         </h2>
 
         <p class="mt-1 text-sm text-muted">
-            Akun yang dihapus tidak bisa dikembalikan — semua data terkait ikut terhapus. Unduh data penting Anda sebelum melanjutkan.
+            Akun yang dihapus tidak bisa dikembalikan, dan semua data terkait akan ikut terhapus. Unduh data penting Anda sebelum melanjutkan.
         </p>
     </header>
 

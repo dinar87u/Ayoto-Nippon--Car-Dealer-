@@ -4,7 +4,7 @@
     <div class="py-6 w-full sm:px-6 lg:px-8">
         <p class="mb-4 text-sm text-muted max-w-3xl">
             Antrean pengerjaan bengkel. Status <strong class="text-ink">Dikerjakan</strong> dan <strong class="text-ink">Selesai</strong>
-            diperbarui lewat halaman detail — lengkap dengan rincian pekerjaan & sparepart-nya.
+            diperbarui lewat halaman detail, lengkap dengan rincian pekerjaan & sparepart-nya.
         </p>
 
         @if (session('sukses'))

@@ -44,7 +44,7 @@
 
             <label class="flex items-center gap-3 text-sm text-ink">
                 <input type="checkbox" name="aktif" value="1" @checked(old('aktif', $part->aktif ?? true)) class="min-w-[20px] min-h-[20px]">
-                Aktif dijual — sparepart tampil di katalog beli sparepart customer.
+                Aktif dijual (sparepart tampil di katalog beli sparepart customer).
             </label>
 
             <x-input-error :messages="$errors->all()" />

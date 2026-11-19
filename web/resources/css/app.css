@@ -137,7 +137,7 @@ body::-webkit-scrollbar-thumb { background: rgb(var(--line)); border-radius: 999
 body::-webkit-scrollbar-thumb:hover { background: rgb(var(--muted)); }
 
 /* ==========================================================================
-   Klon Boxcars untuk beranda — seluruh nilai dipindah dari styles.css
+   Klon Boxcars untuk beranda, seluruh nilai dipindah dari styles.css
    Boxcars, hanya warna yang dipetakan: navy→ink #0B0E14, blue→accent
    #C1121F, blue-hover→#9E0E19, blue-soft→#FBEFEF, bg-off→#FAFAFA,
    surface→#F3F4F6, border→#E5E7EB. Font tetap Plus Jakarta Sans.

@@ -3,7 +3,7 @@
 
     <div class="py-6 w-full sm:px-6 lg:px-8">
         <p class="mb-4 text-sm text-muted max-w-3xl">
-            Semua calon pembeli yang tertangkap dari website, test drive, dan SPK — termasuk yang masuk
+            Semua calon pembeli yang tertangkap dari website, test drive, dan SPK, termasuk yang masuk
             <strong class="text-ink">tanpa akun</strong>. Klik lead untuk melihat riwayat follow-up atau menetapkan sales.
         </p>
 

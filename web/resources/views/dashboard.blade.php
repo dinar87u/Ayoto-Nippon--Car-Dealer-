@@ -134,7 +134,7 @@
                                         {{ $grafikOmzet['label_peran'] ?? 'Analitik' }}
                                     </span>
                                     <h3 class="font-bold text-base text-ink"
-                                        x-text="level === 'hari' ? judul + ' (14 Hari Terakhir)' : (level === 'bulan' ? judul + ' — Tahun ' + tahun : judul + ' per Tahun')">{{ $judulDasarGrafik }} — Tahun {{ $tahunDefault }}</h3>
+                                        x-text="level === 'hari' ? judul + ' (14 Hari Terakhir)' : (level === 'bulan' ? judul + ' Tahun ' + tahun : judul + ' per Tahun')">{{ $judulDasarGrafik }} Tahun {{ $tahunDefault }}</h3>
                                     <p class="text-xs text-muted mt-0.5">{{ $grafikOmzet['peruntukan'] ?? '' }}</p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2 shrink-0">

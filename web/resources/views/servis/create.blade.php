@@ -39,7 +39,7 @@
                                         <option value="">-- Isi manual atau pilih mobil terdaftar --</option>
                                         @foreach ($ownedUnits as $u)
                                             <option value="{{ $u->id }}" data-variant="{{ $u->variant_id }}" data-color="{{ $u->color_id }}" data-vin="{{ $u->vin }}">
-                                                {{ $u->variant?->carModel?->brand?->nama }} {{ $u->variant?->carModel?->nama }} {{ $u->variant?->nama }} — {{ $u->color?->nama ?? '-' }} ({{ $u->vin }})
+                                                {{ $u->variant?->carModel?->brand?->nama }} {{ $u->variant?->carModel?->nama }} {{ $u->variant?->nama }} ({{ $u->color?->nama ?? '-' }}, {{ $u->vin }})
                                             </option>
                                         @endforeach
                                     </select>

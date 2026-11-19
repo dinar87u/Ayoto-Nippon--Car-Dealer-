@@ -148,7 +148,7 @@ class SparepartOrderController extends Controller
                 return true;
             }
 
-            // Order sudah diproses sebelumnya (mis. dobel klik) — jangan kirim notifikasi lagi.
+            // Order sudah diproses sebelumnya (mis. dobel klik), jangan kirim notifikasi lagi.
             return false;
         });
 

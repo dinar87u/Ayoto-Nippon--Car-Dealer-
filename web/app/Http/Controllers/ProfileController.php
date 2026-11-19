@@ -202,7 +202,7 @@ class ProfileController extends Controller
 
         $staf = $user->hasAnyRole(['sales', 'admin-cabang', 'service-advisor', 'mekanik', 'pimpinan', 'superadmin', 'owner']);
 
-        // Data diri khusus akun customer — tersimpan di tabel customers (dipakai SPK, test drive, servis).
+        // Data diri khusus akun customer, tersimpan di tabel customers (dipakai SPK, test drive, servis).
         if (! $staf && $request->anyFilled(['telp', 'nik', 'alamat'])) {
             $dataDiri = $request->validate([
                 'telp' => ['nullable', 'regex:/^[0-9]{9,15}$/'],
