@@ -14,14 +14,13 @@
             if (this.cukupPanjang) s++;
             if (this.adaHuruf) s++;
             if (this.adaAngkaAtauSimbol) s++;
-            if (this.pwdBaru.length >= 12 && /[A-Z]/.test(this.pwdBaru) && /[a-z]/.test(this.pwdBaru)) s++;
             return s;
         },
         get labelKekuatan() {
-            return ['', 'Lemah', 'Cukup', 'Kuat', 'Sangat Kuat'][this.skor] || '';
+            return ['', 'Lemah', 'Cukup', 'Kuat'][this.skor] || '';
         },
         get warnaBar() {
-            return ['', 'bg-rose-500 w-1/4', 'bg-amber-500 w-2/4', 'bg-emerald-500 w-3/4', 'bg-emerald-600 w-full'][this.skor] || 'w-0';
+            return ['', 'bg-rose-500 w-1/3', 'bg-amber-500 w-2/3', 'bg-emerald-500 w-full'][this.skor] || 'w-0';
         }
     }"
 >
