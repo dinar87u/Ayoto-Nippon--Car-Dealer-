@@ -39,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
                 if (! Schema::hasTable('users') || User::count() === 0) {
                     Artisan::call('migrate', ['--force' => true]);
                     Artisan::call('db:seed', ['--force' => true]);
+                } elseif (Schema::hasTable('service_bookings') && ! Schema::hasColumn('service_bookings', 'variant_id')) {
+                    Artisan::call('migrate', ['--force' => true]);
                 }
             } catch (\Throwable $e) {
                 // Abaikan jika koneksi DB belum siap

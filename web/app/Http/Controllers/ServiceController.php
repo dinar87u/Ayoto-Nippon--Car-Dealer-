@@ -6,9 +6,12 @@ use App\Jobs\SendMailJob;
 use App\Jobs\SendWaJob;
 use App\Support\Notifikasi;
 use App\Models\Branch;
+use App\Models\Color;
 use App\Models\Customer;
+use App\Models\Order;
 use App\Models\ServiceBooking;
 use App\Models\Sparepart;
+use App\Models\Unit;
 use App\Models\User;
 use App\Models\Variant;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -74,11 +77,39 @@ class ServiceController extends Controller
         abort_if($user->branch_id === null || $service->branch_id !== $user->branch_id, 403, 'Servis ini di luar cabang Anda.');
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $branches = Branch::where('aktif', true)->orderBy('nama')->get();
+        $variants = Variant::with('carModel.brand')
+            ->where('aktif', true)
+            ->get()
+            ->sortBy([
+                fn ($a, $b) => ($a->carModel?->brand?->nama ?? '') <=> ($b->carModel?->brand?->nama ?? ''),
+                fn ($a, $b) => ($a->carModel?->nama ?? '') <=> ($b->carModel?->nama ?? ''),
+                fn ($a, $b) => $a->nama <=> $b->nama,
+            ])
+            ->values();
+        $colors = Color::where('aktif', true)->orderBy('nama')->get();
 
-        return view('servis.create', compact('branches'));
+        $customer = null;
+        $ownedUnits = collect();
+        if ($request->user()) {
+            $customerIds = Customer::where('user_id', $request->user()->id)->pluck('id')->all();
+            $customer = Customer::where('user_id', $request->user()->id)->first();
+            if ($customerIds) {
+                $ownedUnits = Order::with(['unit.variant.carModel.brand', 'unit.color', 'branch'])
+                    ->whereIn('customer_id', $customerIds)
+                    ->whereNotIn('status', ['Batal', 'Expired'])
+                    ->latest()
+                    ->get()
+                    ->pluck('unit')
+                    ->filter()
+                    ->unique('id')
+                    ->values();
+            }
+        }
+
+        return view('servis.create', compact('branches', 'variants', 'colors', 'customer', 'ownedUnits'));
     }
 
     public function store(Request $request)
@@ -89,12 +120,23 @@ class ServiceController extends Controller
             'telp' => ['required', 'regex:/^[0-9]{10,15}$/'],
             'alamat' => ['required', 'string'],
             'branch_id' => ['required', 'exists:branches,id'],
+            'variant_id' => ['nullable', 'exists:variants,id'],
+            'color_id' => ['nullable', 'exists:colors,id'],
             'nopol' => ['required', 'string', 'max:15'],
             'vin' => ['nullable', 'string', 'max:30'],
             'km' => ['required', 'integer', 'min:0'],
             'keluhan' => ['required', 'string'],
             'jadwal' => ['required', 'date', 'after:now'],
         ]);
+
+        // Jika VIN cocok dengan unit dealer, otomatis lengkapi variant_id dan color_id bila belum dipilih.
+        if (! empty($data['vin']) && (empty($data['variant_id']) || empty($data['color_id']))) {
+            $unitMatch = Unit::where('vin', trim($data['vin']))->first();
+            if ($unitMatch) {
+                $data['variant_id'] = $data['variant_id'] ?? $unitMatch->variant_id;
+                $data['color_id'] = $data['color_id'] ?? $unitMatch->color_id;
+            }
+        }
 
         $jadwal = new \DateTime($data['jadwal']);
         $penuh = ServiceBooking::where('branch_id', $data['branch_id'])
@@ -117,6 +159,8 @@ class ServiceController extends Controller
                 'no_svc' => sprintf('SVC-%s-%04d', $tahun, $seq),
                 'customer_id' => $customer->id,
                 'branch_id' => $data['branch_id'],
+                'variant_id' => $data['variant_id'] ?? null,
+                'color_id' => $data['color_id'] ?? null,
                 'nopol' => strtoupper($data['nopol']),
                 'vin' => $data['vin'] ?? null,
                 'km' => $data['km'],

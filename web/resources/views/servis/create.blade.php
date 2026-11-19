@@ -30,23 +30,39 @@
                             Informasi Pemilik & Kendaraan
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            @if (($ownedUnits ?? collect())->isNotEmpty())
+                                <div class="sm:col-span-2 p-4 rounded-2xl bg-surface-2/60 border border-line">
+                                    <label for="pilih-mobil-saya" class="block text-xs font-semibold uppercase tracking-wider text-muted">Pilih dari Mobil Anda (Opsional)</label>
+                                    <select id="pilih-mobil-saya"
+                                        onchange="const opt = this.options[this.selectedIndex]; if (!opt.value) return; document.getElementById('variant_id').value = opt.dataset.variant || ''; document.getElementById('color_id').value = opt.dataset.color || ''; if (opt.dataset.vin) document.getElementById('vin').value = opt.dataset.vin;"
+                                        class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5">
+                                        <option value="">-- Isi manual atau pilih mobil terdaftar --</option>
+                                        @foreach ($ownedUnits as $u)
+                                            <option value="{{ $u->id }}" data-variant="{{ $u->variant_id }}" data-color="{{ $u->color_id }}" data-vin="{{ $u->vin }}">
+                                                {{ $u->variant?->carModel?->brand?->nama }} {{ $u->variant?->carModel?->nama }} {{ $u->variant?->nama }} — {{ $u->color?->nama ?? '-' }} ({{ $u->vin }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
                             <div>
                                 <label for="nama" class="block text-xs font-semibold uppercase tracking-wider text-muted">Nama Pemilik / Pembawa Mobil</label>
-                                <input id="nama" name="nama" value="{{ old('nama') }}" required 
+                                <input id="nama" name="nama" value="{{ old('nama', $customer?->nama ?? auth()->user()?->name) }}" required 
                                     placeholder="Sesuai STNK / KTP"
                                     class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5">
                             </div>
 
                             <div>
                                 <label for="nik" class="block text-xs font-semibold uppercase tracking-wider text-muted">NIK KTP (16 Digit)</label>
-                                <input id="nik" name="nik" value="{{ old('nik') }}" required inputmode="numeric" maxlength="16" 
+                                <input id="nik" name="nik" value="{{ old('nik', $customer?->nik) }}" required inputmode="numeric" maxlength="16" 
                                     placeholder="3201..."
                                     class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5">
                             </div>
 
                             <div>
                                 <label for="telp" class="block text-xs font-semibold uppercase tracking-wider text-muted">Nomor WhatsApp / Telepon</label>
-                                <input id="telp" name="telp" value="{{ old('telp') }}" required inputmode="tel" 
+                                <input id="telp" name="telp" value="{{ old('telp', $customer?->telp) }}" required inputmode="tel" 
                                     placeholder="0812..."
                                     class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5">
                             </div>
@@ -56,6 +72,32 @@
                                 <input id="nopol" name="nopol" value="{{ old('nopol') }}" required 
                                     placeholder="Contoh: B 1234 NIP"
                                     class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5 uppercase font-mono">
+                            </div>
+
+                            <div>
+                                <label for="variant_id" class="block text-xs font-semibold uppercase tracking-wider text-muted">Model &amp; Varian Mobil</label>
+                                <select id="variant_id" name="variant_id"
+                                    class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5">
+                                    <option value="">Pilih Model &amp; Varian Mobil</option>
+                                    @foreach ($variants ?? [] as $v)
+                                        <option value="{{ $v->id }}" @selected((string) old('variant_id') === (string) $v->id)>
+                                            {{ $v->carModel?->brand?->nama }} {{ $v->carModel?->nama }} {{ $v->nama }} ({{ $v->transmisi }} · {{ $v->bbm }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="color_id" class="block text-xs font-semibold uppercase tracking-wider text-muted">Warna Mobil</label>
+                                <select id="color_id" name="color_id"
+                                    class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink text-sm focus:border-accent focus:ring-1 focus:ring-accent min-h-[48px] px-3.5">
+                                    <option value="">Pilih Warna Mobil</option>
+                                    @foreach ($colors ?? [] as $c)
+                                        <option value="{{ $c->id }}" @selected((string) old('color_id') === (string) $c->id)>
+                                            {{ $c->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <div>
@@ -103,7 +145,7 @@
                             <label for="alamat" class="block text-xs font-semibold uppercase tracking-wider text-muted">Alamat Tempat Tinggal</label>
                             <textarea id="alamat" name="alamat" required rows="2" 
                                 placeholder="Alamat domisili pemilik..."
-                                class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent p-3.5">{{ old('alamat') }}</textarea>
+                                class="mt-1.5 w-full bg-surface border border-line rounded-xl text-ink placeholder-gray-500 text-sm focus:border-accent focus:ring-1 focus:ring-accent p-3.5">{{ old('alamat', $customer?->alamat) }}</textarea>
                         </div>
 
                         <div>

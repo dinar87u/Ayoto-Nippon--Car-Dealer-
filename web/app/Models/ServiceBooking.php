@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServiceBooking extends Model
 {
-    protected $fillable = ['no_svc', 'customer_id', 'branch_id', 'nopol', 'vin', 'km', 'keluhan', 'tanggapan', 'jadwal', 'status', 'estimasi_biaya', 'metode_bayar', 'mekanik_id'];
+    protected $fillable = ['no_svc', 'customer_id', 'branch_id', 'variant_id', 'color_id', 'nopol', 'vin', 'km', 'keluhan', 'tanggapan', 'jadwal', 'status', 'estimasi_biaya', 'metode_bayar', 'mekanik_id'];
 
     protected function casts(): array
     {
@@ -23,6 +23,16 @@ class ServiceBooking extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(Variant::class);
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(Color::class);
     }
 
     public function mekanik(): BelongsTo

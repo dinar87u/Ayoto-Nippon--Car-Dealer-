@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Customer;
+use App\Models\Order;
+use App\Models\ServiceBooking;
+use App\Models\SparepartOrder;
+use App\Models\TestDrive;
+use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,17 +26,20 @@ class ProfileController extends Controller
 
         $staf = $user->hasAnyRole(['sales', 'admin-cabang', 'service-advisor', 'mekanik', 'pimpinan', 'superadmin', 'owner']);
 
-        // Akun customer: muat data dirinya (telp, NIK, alamat) yang dipakai SPK/test drive.
+        // Akun customer: muat seluruh customer ID miliknya (dipakai SPK, test drive, servis, sparepart).
+        $customerIds = ! $staf
+            ? Customer::where('user_id', $user->id)->pluck('id')->all()
+            : [];
         $customer = ! $staf
             ? Customer::where('user_id', $user->id)->first()
             : null;
 
         // Dashboard pribadi: ringkasan aktivitas user ini sendiri.
         $aktivitas = ! $staf ? [
-            'spk' => $customer ? $customer->orders()->count() : 0,
-            'testDrive' => $customer ? $customer->testDrives()->count() : 0,
-            'servis' => $customer ? $customer->services()->count() : 0,
-            'sparepart' => $customer ? $customer->sparepartOrders()->count() : 0,
+            'spk' => $customerIds ? Order::whereIn('customer_id', $customerIds)->count() : 0,
+            'testDrive' => $customerIds ? TestDrive::whereIn('customer_id', $customerIds)->count() : 0,
+            'servis' => $customerIds ? ServiceBooking::whereIn('customer_id', $customerIds)->count() : 0,
+            'sparepart' => $customerIds ? SparepartOrder::whereIn('customer_id', $customerIds)->count() : 0,
         ] : null;
 
         // Data Kendaraan Saya & Servis Terakhir untuk Dashboard Pelanggan
@@ -39,15 +47,38 @@ class ProfileController extends Controller
         $riwayatServis = collect();
         $kendaraanList = collect();
 
-        if (! $staf && $customer) {
-            $riwayatServis = $customer->services()
-                ->with(['branch', 'mekanik', 'details'])
+        if (! $staf && $customerIds) {
+            $riwayatServis = ServiceBooking::whereIn('customer_id', $customerIds)
+                ->with(['branch', 'mekanik', 'details', 'variant.carModel.brand', 'color'])
                 ->orderByDesc('jadwal')
                 ->get();
             $servisTerakhir = $riwayatServis->first();
 
+            // Helper cari foto unit dari variant + color (fallback ke unit lain dari variant/model sama)
+            $cariFotoUnit = function (?Unit $unit, ?int $variantId = null, ?int $colorId = null): ?string {
+                if ($unit && $unit->foto_utama) {
+                    return $unit->foto_utama;
+                }
+                $vId = $variantId ?? $unit?->variant_id;
+                $cId = $colorId ?? $unit?->color_id;
+                if ($vId) {
+                    if ($cId) {
+                        $fotoWarna = Unit::where('variant_id', $vId)->where('color_id', $cId)->whereNotNull('foto_utama')->value('foto_utama');
+                        if ($fotoWarna) {
+                            return $fotoWarna;
+                        }
+                    }
+                    $fotoVarian = Unit::where('variant_id', $vId)->whereNotNull('foto_utama')->value('foto_utama');
+                    if ($fotoVarian) {
+                        return $fotoVarian;
+                    }
+                }
+
+                return null;
+            };
+
             // 1. Mobil dari SPK (Deal / MenungguVerifikasi / MenungguBayar)
-            $orders = $customer->orders()
+            $orders = Order::whereIn('customer_id', $customerIds)
                 ->with(['unit.variant.carModel.brand', 'unit.color', 'branch', 'invoice'])
                 ->latest()
                 ->get();
@@ -73,7 +104,7 @@ class ProfileController extends Controller
 
                 $kendaraanList->push([
                     'nama' => $namaMobil ?: 'Unit Kendaraan',
-                    'foto' => $unit?->foto_utama,
+                    'foto' => $cariFotoUnit($unit),
                     'nopol' => $svcMatch?->nopol ?: ($order->stnk_selesai_at ? 'STNK Terbit' : 'Proses STNK'),
                     'vin' => $unit?->vin ?? '-',
                     'warna' => $unit?->color?->nama ?? '-',
@@ -97,22 +128,25 @@ class ProfileController extends Controller
                 }
                 $latestSvc = $grupSvc->first();
                 $unitByVin = $latestSvc->vin
-                    ? \App\Models\Unit::with(['variant.carModel.brand', 'color'])->where('vin', $latestSvc->vin)->first()
+                    ? Unit::with(['variant.carModel.brand', 'color'])->where('vin', $latestSvc->vin)->first()
                     : null;
-                $namaMobilSvc = $unitByVin
-                    ? trim(($unitByVin->variant?->carModel?->brand?->nama ?? '') . ' ' . ($unitByVin->variant?->carModel?->nama ?? '') . ' ' . ($unitByVin->variant?->nama ?? ''))
+                $variantSvc = $unitByVin?->variant ?? $latestSvc->variant;
+                $colorSvc = $unitByVin?->color ?? $latestSvc->color;
+
+                $namaMobilSvc = $variantSvc
+                    ? trim(($variantSvc->carModel?->brand?->nama ?? '') . ' ' . ($variantSvc->carModel?->nama ?? '') . ' ' . ($variantSvc->nama ?? ''))
                     : 'Kendaraan Servis Terdaftar';
 
                 $kendaraanList->push([
-                    'nama' => $namaMobilSvc,
-                    'foto' => $unitByVin?->foto_utama,
+                    'nama' => $namaMobilSvc ?: 'Kendaraan Servis Terdaftar',
+                    'foto' => $cariFotoUnit($unitByVin, $variantSvc?->id, $colorSvc?->id),
                     'nopol' => $latestSvc->nopol,
                     'vin' => $latestSvc->vin ?: '-',
-                    'warna' => $unitByVin?->color?->nama ?? '-',
-                    'warna_hex' => $unitByVin?->color?->kode_hex ?? '#9CA3AF',
+                    'warna' => $colorSvc?->nama ?? '-',
+                    'warna_hex' => $colorSvc?->kode_hex ?? '#9CA3AF',
                     'tahun' => $unitByVin?->tahun_rakit ?? '-',
-                    'transmisi' => $unitByVin?->variant?->transmisi ?? '-',
-                    'bbm' => $unitByVin?->variant?->bbm ?? '-',
+                    'transmisi' => $variantSvc?->transmisi ?? '-',
+                    'bbm' => $variantSvc?->bbm ?? '-',
                     'cabang' => $latestSvc->branch?->nama ?? '-',
                     'no_spk' => null,
                     'status_spk' => 'Terdaftar Servis',

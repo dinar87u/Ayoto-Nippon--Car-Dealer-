@@ -65,9 +65,6 @@
                             <p class="text-[11px] font-bold uppercase tracking-wider text-accent">Garasi Pelanggan</p>
                             <h2 id="judul-kendaraan-saya" class="text-base font-bold text-ink">Kendaraan Saya &amp; Detail Unit</h2>
                         </div>
-                        <a href="{{ route('katalog.index') }}" class="text-xs font-semibold text-accent hover:underline">
-                            + Lihat Katalog
-                        </a>
                     </div>
 
                     <div class="divide-y divide-line">
@@ -76,11 +73,11 @@
                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div class="flex items-center gap-4 min-w-0">
                                         @if (! empty($mobil['foto']))
-                                            <div class="w-24 h-16 rounded-xl overflow-hidden bg-surface-2 border border-line shrink-0">
+                                            <div class="w-28 h-20 rounded-xl overflow-hidden bg-surface-2 border border-line shrink-0">
                                                 <img src="{{ asset($mobil['foto']) }}" alt="{{ $mobil['nama'] }}" class="w-full h-full object-cover" loading="lazy">
                                             </div>
                                         @else
-                                            <div class="w-16 h-16 rounded-xl bg-surface-2 border border-line flex items-center justify-center text-muted shrink-0">
+                                            <div class="w-20 h-20 rounded-xl bg-surface-2 border border-line flex items-center justify-center text-muted shrink-0">
                                                 <x-nav-icon name="car" />
                                             </div>
                                         @endif
