@@ -158,13 +158,13 @@
                                 <p class="text-[11px] font-bold uppercase tracking-wider text-accent">Pemantauan Bengkel</p>
                                 <h2 id="judul-servis-terakhir" class="text-base font-bold text-ink">Servis Terakhir</h2>
                             </div>
-                            <a href="{{ route('servis.create') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors">
-                                + Booking Servis
+                            <a href="{{ route('pesanan.servis') }}" class="text-xs font-semibold text-accent hover:underline">
+                                Lihat Detail Riwayat Servis &rarr;
                             </a>
                         </div>
 
                         @if ($servisTerakhir)
-                            <div class="p-6 space-y-5">
+                            <div class="p-6">
                                 <div class="flex items-start justify-between gap-3">
                                     <div>
                                         <p class="text-[11px] font-semibold uppercase tracking-wider text-muted">Terakhir Servis</p>
@@ -179,12 +179,6 @@
                                         </p>
                                     </div>
                                     <x-status-badge :status="$servisTerakhir->status" />
-                                </div>
-
-                                <div class="pt-4 border-t border-line flex items-center justify-between gap-3">
-                                    <a href="{{ route('pesanan.servis') }}" class="text-xs font-semibold text-accent hover:underline">
-                                        Lihat Detail Riwayat Servis &rarr;
-                                    </a>
                                 </div>
                             </div>
                         @else
