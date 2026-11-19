@@ -43,29 +43,17 @@
         }
     }"
 >
-    <header class="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-line">
-        <div>
-            <div class="flex items-center gap-2">
-                <h2 class="text-lg font-bold text-ink">Data Diri</h2>
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                    Terlindungi
-                </span>
-            </div>
-            <p class="mt-1 text-sm text-muted">
-                Data sensitif disensor secara default. Perubahan Email, No. HP, atau NIK memerlukan konfirmasi password.
-            </p>
+    <header class="pb-4 border-b border-line">
+        <div class="flex items-center gap-2">
+            <h2 class="text-lg font-bold text-ink">Data Diri</h2>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                Terlindungi
+            </span>
         </div>
-
-        <button
-            type="button"
-            x-show="!modeEdit"
-            @click="modeEdit = true"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold text-ink bg-surface border border-line hover:border-accent hover:text-accent transition-colors inline-flex items-center gap-1.5"
-        >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-            Ubah Data Diri
-        </button>
+        <p class="mt-1 text-sm text-muted">
+            Data sensitif disensor secara default. Perubahan Email, No. HP, atau NIK memerlukan konfirmasi password.
+        </p>
     </header>
 
     @if (session('status') === 'profile-updated')
@@ -140,6 +128,17 @@
                 </div>
             @endunless
         </dl>
+
+        <div class="pt-2 flex justify-end">
+            <button
+                type="button"
+                @click="modeEdit = true"
+                class="px-4 py-2 rounded-xl text-xs font-bold text-ink bg-surface border border-line hover:border-accent hover:text-accent transition-colors inline-flex items-center gap-1.5"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Ubah Data Diri
+            </button>
+        </div>
     </div>
 
     <!-- Mode Edit -->
