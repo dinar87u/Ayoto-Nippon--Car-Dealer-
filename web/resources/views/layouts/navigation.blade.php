@@ -26,8 +26,9 @@
             </button>
             <div x-show="buka" class="space-y-0.5">
                 @foreach ([
-                    ['profile.edit', 'profile.*', 'Dashboard Akun', 'grid'],
+                    ['profile.edit', 'profile.edit', 'Dashboard Akun', 'grid'],
                     ['pesanan.index', 'pesanan.*', 'Pesanan Saya', 'doc'],
+                    ['profile.data-diri', 'profile.data-diri', 'Data Diri', 'user'],
                 ] as [$route, $pola, $label, $ikon])
                     <a href="{{ route($route) }}" title="{{ $label }}" aria-current="{{ request()->routeIs($pola) ? 'page' : 'false' }}" class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 {{ request()->routeIs($pola) ? 'bg-white/10 font-semibold text-white' : 'hover:bg-white/10 hover:text-white' }}">
                         @if (request()->routeIs($pola))

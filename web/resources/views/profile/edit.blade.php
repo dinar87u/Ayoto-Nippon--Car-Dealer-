@@ -15,53 +15,256 @@
     </x-slot>
 
     <div class="py-6 w-full px-4 sm:px-6 lg:px-8 space-y-6">
-        @if ($aktivitas)
-            <!-- KPI Aktivitas Pelanggan (Gaya Dashboard Admin) -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <a href="{{ route('pesanan.index') }}#riwayat-spk" class="bg-surface p-5 rounded-2xl border border-line border-l-4 border-l-accent hover:border-accent transition-all">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-muted">Pengajuan SPK</p>
-                    <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['spk'], 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-muted">Surat Pesanan Kendaraan</p>
-                </a>
+        @if ($staf)
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="lg:col-span-7 bg-surface rounded-2xl border border-line shadow-sm p-6">
+                    @include('profile.partials.update-profile-information-form')
+                </div>
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-surface rounded-2xl border border-line shadow-sm p-6">
+                        @include('profile.partials.update-password-form')
+                    </div>
+                </div>
+            </div>
+        @else
+            @if ($aktivitas)
+                <!-- KPI Aktivitas Pelanggan -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <a href="{{ route('pesanan.index') }}#riwayat-spk" class="bg-surface p-5 rounded-2xl border border-line border-l-4 border-l-accent hover:border-accent transition-all">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-muted">Pengajuan SPK</p>
+                        <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['spk'], 0, ',', '.') }}</p>
+                        <p class="mt-1 text-xs text-muted">Surat Pesanan Kendaraan</p>
+                    </a>
 
-                <a href="{{ route('pesanan.index') }}#riwayat-td" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-muted">Booking Test Drive</p>
-                    <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['testDrive'], 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-muted">Jadwal uji kemudi unit</p>
-                </a>
+                    <a href="{{ route('pesanan.index') }}#riwayat-td" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-muted">Booking Test Drive</p>
+                        <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['testDrive'], 0, ',', '.') }}</p>
+                        <p class="mt-1 text-xs text-muted">Jadwal uji kemudi unit</p>
+                    </a>
 
-                <a href="{{ route('pesanan.index') }}#riwayat-svc" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-muted">Booking Servis</p>
-                    <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['servis'], 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-muted">Perawatan berkala bengkel</p>
-                </a>
+                    <a href="{{ route('pesanan.index') }}#riwayat-svc" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-muted">Booking Servis</p>
+                        <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['servis'], 0, ',', '.') }}</p>
+                        <p class="mt-1 text-xs text-muted">Perawatan berkala bengkel</p>
+                    </a>
 
-                <a href="{{ route('pesanan.index') }}#riwayat-spo" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-muted">Order Sparepart</p>
-                    <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['sparepart'], 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-muted">Pembelian suku cadang asli</p>
-                </a>
+                    <a href="{{ route('pesanan.index') }}#riwayat-spo" class="bg-surface p-5 rounded-2xl border border-line hover:border-ink/40 transition-all">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-muted">Order Sparepart</p>
+                        <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink">{{ number_format($aktivitas['sparepart'], 0, ',', '.') }}</p>
+                        <p class="mt-1 text-xs text-muted">Pembelian suku cadang asli</p>
+                    </a>
+                </div>
+            @endif
+
+            <!-- Grid Utama Dashboard Pelanggan: Kiri (Garasi / Mobil Saya) & Kanan (Servis Terakhir) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Kolom Kiri (7 col): Kendaraan Saya & Detail Nopol / VIN -->
+                <section aria-labelledby="judul-kendaraan-saya" class="lg:col-span-7 bg-surface rounded-2xl border border-line shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-line flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[11px] font-bold uppercase tracking-wider text-accent">Garasi Pelanggan</p>
+                            <h2 id="judul-kendaraan-saya" class="text-base font-bold text-ink">Kendaraan Saya &amp; Detail Unit</h2>
+                        </div>
+                        <a href="{{ route('katalog.index') }}" class="text-xs font-semibold text-accent hover:underline">
+                            + Lihat Katalog
+                        </a>
+                    </div>
+
+                    <div class="divide-y divide-line">
+                        @forelse ($kendaraanList ?? [] as $mobil)
+                            <div class="p-6 space-y-4">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="flex items-center gap-4 min-w-0">
+                                        @if (! empty($mobil['foto']))
+                                            <div class="w-24 h-16 rounded-xl overflow-hidden bg-surface-2 border border-line shrink-0">
+                                                <img src="{{ asset($mobil['foto']) }}" alt="{{ $mobil['nama'] }}" class="w-full h-full object-cover" loading="lazy">
+                                            </div>
+                                        @else
+                                            <div class="w-16 h-16 rounded-xl bg-surface-2 border border-line flex items-center justify-center text-muted shrink-0">
+                                                <x-nav-icon name="car" />
+                                            </div>
+                                        @endif
+                                        <div class="min-w-0">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <h3 class="text-base font-extrabold text-ink truncate">{{ $mobil['nama'] }}</h3>
+                                                <x-status-badge :status="$mobil['status_spk']" />
+                                            </div>
+                                            <p class="mt-1 text-xs text-muted">
+                                                Cabang {{ $mobil['cabang'] }}
+                                                @if (! empty($mobil['no_spk']))
+                                                    &middot; <a href="{{ route('spk.show', $mobil['no_spk']) }}" class="font-mono font-semibold text-accent hover:underline">{{ $mobil['no_spk'] }}</a>
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="shrink-0">
+                                        <span class="inline-flex flex-col items-start sm:items-end px-3.5 py-2 rounded-xl bg-surface-2 border border-line">
+                                            <span class="text-[10px] font-semibold uppercase tracking-wider text-muted">Nomor Polisi</span>
+                                            <strong class="font-mono text-sm font-black text-ink tracking-wider">{{ $mobil['nopol'] }}</strong>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Detail Spesifikasi & Identitas Kendaraan -->
+                                <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-line text-xs">
+                                    <div class="p-3 rounded-xl bg-surface-2/50 border border-line">
+                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Nomor Rangka (VIN)</dt>
+                                        <dd class="mt-1 font-mono font-bold text-ink truncate" title="{{ $mobil['vin'] }}">{{ $mobil['vin'] }}</dd>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-surface-2/50 border border-line">
+                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Warna &amp; Tahun</dt>
+                                        <dd class="mt-1 font-bold text-ink flex items-center gap-1.5">
+                                            <span class="w-3 h-3 rounded-full border border-line shrink-0" style="background-color: {{ $mobil['warna_hex'] }}"></span>
+                                            <span class="truncate">{{ $mobil['warna'] }} ({{ $mobil['tahun'] }})</span>
+                                        </dd>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-surface-2/50 border border-line">
+                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Transmisi / BBM</dt>
+                                        <dd class="mt-1 font-bold text-ink truncate">{{ $mobil['transmisi'] }} &middot; {{ $mobil['bbm'] }}</dd>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-surface-2/50 border border-line">
+                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Kilometer Terakhir</dt>
+                                        <dd class="mt-1 font-bold text-ink tabular-nums">
+                                            {{ ! empty($mobil['km_terakhir']) ? number_format($mobil['km_terakhir'], 0, ',', '.') . ' km' : 'Belum tercatat' }}
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        @empty
+                            <div class="p-8 text-center space-y-3">
+                                <p class="text-sm font-semibold text-ink">Belum ada data kendaraan terdaftar di akun Anda.</p>
+                                <p class="text-xs text-muted max-w-md mx-auto">
+                                    Kendaraan Anda akan otomatis tampil di sini setelah mengajukan pemesanan SPK atau melakukan booking servis berkala.
+                                </p>
+                                <div class="pt-1 flex flex-wrap items-center justify-center gap-2">
+                                    <a href="{{ route('katalog.index') }}" class="px-4 py-2 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors">
+                                        Pilih Mobil di Katalog
+                                    </a>
+                                    <a href="{{ route('servis.create') }}" class="px-4 py-2 rounded-xl text-xs font-semibold bg-surface border border-line text-ink hover:border-accent transition-colors">
+                                        Daftarkan Servis Mobil
+                                    </a>
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                </section>
+
+                <!-- Kolom Kanan (5 col): Informasi Servis Terakhir -->
+                <div class="lg:col-span-5 space-y-6">
+                    <section aria-labelledby="judul-servis-terakhir" class="bg-surface rounded-2xl border border-line shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 border-b border-line flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-[11px] font-bold uppercase tracking-wider text-accent">Pemantauan Bengkel</p>
+                                <h2 id="judul-servis-terakhir" class="text-base font-bold text-ink">Servis Terakhir</h2>
+                            </div>
+                            <a href="{{ route('servis.create') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-accent-strong text-white hover:bg-[#9E0E19] transition-colors">
+                                + Booking Servis
+                            </a>
+                        </div>
+
+                        @if ($servisTerakhir)
+                            <div class="p-6 space-y-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <span class="font-mono text-sm font-extrabold text-accent">{{ $servisTerakhir->no_svc }}</span>
+                                        <p class="mt-0.5 text-base font-bold text-ink">
+                                            {{ $servisTerakhir->jadwal->format('d M Y, H:i') }} WIB
+                                        </p>
+                                        <p class="text-xs text-muted">
+                                            {{ $servisTerakhir->jadwal->diffForHumans() }} &middot; Cabang {{ $servisTerakhir->branch?->nama ?? '-' }}
+                                        </p>
+                                    </div>
+                                    <x-status-badge :status="$servisTerakhir->status" />
+                                </div>
+
+                                <dl class="grid grid-cols-2 gap-3 text-xs">
+                                    <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
+                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Nomor Polisi</dt>
+                                        <dd class="mt-1 font-mono font-extrabold text-sm text-ink">{{ $servisTerakhir->nopol ?: '-' }}</dd>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
+                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Odometer Saat Servis</dt>
+                                        <dd class="mt-1 font-extrabold text-sm text-ink tabular-nums">{{ number_format($servisTerakhir->km, 0, ',', '.') }} km</dd>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
+                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Mekanik Penanggung Jawab</dt>
+                                        <dd class="mt-1 font-bold text-ink">{{ $servisTerakhir->mekanik?->name ?? 'Menunggu Penugasan' }}</dd>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-surface-2/60 border border-line">
+                                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-muted">Biaya / Estimasi</dt>
+                                        <dd class="mt-1 font-bold text-ink tabular-nums">
+                                            @php
+                                                $biayaSvc = $servisTerakhir->details->sum('subtotal') ?: $servisTerakhir->estimasi_biaya;
+                                            @endphp
+                                            {{ $biayaSvc > 0 ? 'Rp ' . number_format($biayaSvc, 0, ',', '.') : 'Menunggu Estimasi' }}
+                                        </dd>
+                                    </div>
+                                </dl>
+
+                                <div class="p-3.5 rounded-xl bg-surface-2/40 border border-line text-xs space-y-1.5">
+                                    <span class="block text-[10px] font-semibold uppercase tracking-wider text-muted">Keluhan / Catatan Servis</span>
+                                    <p class="text-ink font-medium leading-relaxed">{{ $servisTerakhir->keluhan ?: '-' }}</p>
+                                    @if ($servisTerakhir->tanggapan)
+                                        <div class="pt-2 mt-2 border-t border-line">
+                                            <span class="block text-[10px] font-semibold uppercase tracking-wider text-accent">Catatan Bengkel / Service Advisor</span>
+                                            <p class="mt-0.5 text-ink">{{ $servisTerakhir->tanggapan }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="pt-1 flex flex-wrap items-center justify-between gap-3">
+                                    <a href="{{ route('pesanan.index') }}#riwayat-svc" class="text-xs font-semibold text-accent hover:underline">
+                                        Lihat Semua Riwayat Servis &rarr;
+                                    </a>
+                                    @if ($servisTerakhir->status === 'Selesai')
+                                        <a href="{{ route('servis.invoice', $servisTerakhir) }}" class="px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors">
+                                            Unduh Invoice PDF
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @else
+                            <div class="p-8 text-center space-y-2">
+                                <p class="text-sm font-semibold text-ink">Belum ada riwayat servis berkala.</p>
+                                <p class="text-xs text-muted">Jadwalkan perawatan berkala kendaraan Anda di bengkel resmi Ayoto Nippon.</p>
+                            </div>
+                        @endif
+                    </section>
+
+                    <!-- Ringkasan Profil Singkat + Pintasan ke Menu Data Diri -->
+                    <section aria-labelledby="judul-ringkasan-profil" class="bg-surface rounded-2xl border border-line shadow-sm p-6 space-y-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-[11px] font-bold uppercase tracking-wider text-muted">Identitas Pemilik</p>
+                                <h2 id="judul-ringkasan-profil" class="text-base font-bold text-ink">Data Diri Terdaftar</h2>
+                            </div>
+                            <a href="{{ route('profile.data-diri') }}" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-ink bg-surface-2 border border-line hover:border-accent transition-colors">
+                                Ubah Data Diri &rarr;
+                            </a>
+                        </div>
+
+                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <dt class="text-muted">Nama Lengkap</dt>
+                                <dd class="mt-0.5 font-bold text-ink">{{ $user->name }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-muted">Email</dt>
+                                <dd class="mt-0.5 font-bold text-ink truncate">{{ $user->email }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-muted">No. HP / WhatsApp</dt>
+                                <dd class="mt-0.5 font-bold text-ink tabular-nums">{{ $customer?->telp ?: 'Belum diisi' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-muted">NIK KTP</dt>
+                                <dd class="mt-0.5 font-mono font-bold text-ink tabular-nums">{{ $customer?->nik ?: 'Belum diisi' }}</dd>
+                            </div>
+                        </dl>
+                    </section>
+                </div>
             </div>
         @endif
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <!-- Kolom Kiri: Data Diri -->
-            <div class="lg:col-span-7 bg-surface rounded-2xl border border-line shadow-sm p-6">
-                @include('profile.partials.update-profile-information-form')
-            </div>
-
-            <!-- Kolom Kanan: Ganti Password & Hapus Akun -->
-            <div class="lg:col-span-5 space-y-6">
-                <div class="bg-surface rounded-2xl border border-line shadow-sm p-6">
-                    @include('profile.partials.update-password-form')
-                </div>
-
-                @unless ($staf)
-                    <div class="bg-surface rounded-2xl border border-red-200 dark:border-red-500/30 shadow-sm p-6">
-                        @include('profile.partials.delete-user-form')
-                    </div>
-                @endunless
-            </div>
-        </div>
     </div>
 </x-app-layout>
