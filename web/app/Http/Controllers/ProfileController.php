@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -164,6 +165,8 @@ class ProfileController extends Controller
             'servisTerakhir' => $servisTerakhir,
             'riwayatServis' => $riwayatServis,
             'kendaraanList' => $kendaraanList,
+            'nikTerkunci' => ! $staf ? $this->cekNikTerkunci($customerIds, $customer) : false,
+            'transaksiAktif' => ! $staf ? $this->hitungTransaksiAktif($customerIds) : ['spk' => 0, 'servis' => 0, 'sparepart' => 0, 'total' => 0],
         ]);
     }
 
@@ -174,6 +177,9 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $staf = $user->hasAnyRole(['sales', 'admin-cabang', 'service-advisor', 'mekanik', 'pimpinan', 'superadmin', 'owner']);
+        $customerIds = ! $staf
+            ? Customer::where('user_id', $user->id)->pluck('id')->all()
+            : [];
         $customer = ! $staf
             ? Customer::where('user_id', $user->id)->first()
             : null;
@@ -182,6 +188,8 @@ class ProfileController extends Controller
             'user' => $user,
             'customer' => $customer,
             'staf' => $staf,
+            'nikTerkunci' => ! $staf ? $this->cekNikTerkunci($customerIds, $customer) : false,
+            'transaksiAktif' => ! $staf ? $this->hitungTransaksiAktif($customerIds) : ['spk' => 0, 'servis' => 0, 'sparepart' => 0, 'total' => 0],
         ]);
     }
 
@@ -191,8 +199,65 @@ class ProfileController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $staf = $user->hasAnyRole(['sales', 'admin-cabang', 'service-advisor', 'mekanik', 'pimpinan', 'superadmin', 'owner']);
+        $validatedProfile = app(ProfileUpdateRequest::class)->validated();
 
-        $user->fill(app(ProfileUpdateRequest::class)->validated());
+        $customerIds = ! $staf ? Customer::where('user_id', $user->id)->pluck('id')->all() : [];
+        $customer = ! $staf ? Customer::where('user_id', $user->id)->first() : null;
+        $nikTerkunci = ! $staf && $this->cekNikTerkunci($customerIds, $customer);
+
+        $dataDiri = [];
+        if (! $staf && $request->hasAny(['telp', 'nik', 'alamat'])) {
+            $dataDiri = $request->validate([
+                'telp' => ['nullable', 'regex:/^[0-9]{9,15}$/'],
+                'nik' => ['nullable', 'digits:16'],
+                'alamat' => ['nullable', 'string', 'max:500'],
+            ], [
+                'telp.regex' => 'No. HP harus terdiri dari 9 sampai 15 digit angka.',
+                'nik.digits' => 'NIK KTP harus terdiri dari tepat 16 digit angka.',
+            ]);
+        }
+
+        $emailLama = strtolower(trim((string) $user->email));
+        $emailBaru = strtolower(trim((string) $validatedProfile['email']));
+        $emailBerubah = $emailBaru !== $emailLama;
+
+        $telpLama = trim((string) ($customer?->telp ?? ''));
+        $telpBaru = array_key_exists('telp', $dataDiri) ? trim((string) ($dataDiri['telp'] ?? '')) : $telpLama;
+        $telpBerubah = ! $staf && array_key_exists('telp', $dataDiri) && $telpBaru !== $telpLama;
+
+        $nikLama = trim((string) ($customer?->nik ?? ''));
+        $nikBaru = array_key_exists('nik', $dataDiri) ? trim((string) ($dataDiri['nik'] ?? '')) : $nikLama;
+        $nikBerubah = ! $staf && array_key_exists('nik', $dataDiri) && $nikBaru !== $nikLama;
+
+        if ($nikTerkunci && $nikBerubah) {
+            throw ValidationException::withMessages([
+                'nik' => 'NIK sudah terkunci karena terikat pada dokumen SPK/STNK. Hubungi admin cabang untuk perubahan.',
+            ]);
+        }
+
+        if ($nikBerubah && $nikBaru !== '') {
+            $milikOrangLain = Customer::where('nik', $nikBaru)
+                ->where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', '!=', $user->id))
+                ->exists();
+            if ($milikOrangLain) {
+                throw ValidationException::withMessages([
+                    'nik' => 'NIK ini sudah terdaftar pada akun pelanggan lain.',
+                ]);
+            }
+        }
+
+        // Wajib konfirmasi password saat mengubah data sensitif (Email, No. HP, atau NIK).
+        if ($emailBerubah || $telpBerubah || $nikBerubah) {
+            $request->validate([
+                'current_password' => ['required', 'current_password'],
+            ], [
+                'current_password.required' => 'Masukkan password saat ini untuk mengonfirmasi perubahan data sensitif (Email, No. HP, atau NIK).',
+                'current_password.current_password' => 'Password saat ini tidak sesuai.',
+            ]);
+        }
+
+        $user->fill($validatedProfile);
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
@@ -200,20 +265,15 @@ class ProfileController extends Controller
 
         $user->save();
 
-        $staf = $user->hasAnyRole(['sales', 'admin-cabang', 'service-advisor', 'mekanik', 'pimpinan', 'superadmin', 'owner']);
-
         // Data diri khusus akun customer, tersimpan di tabel customers (dipakai SPK, test drive, servis).
         if (! $staf && $request->anyFilled(['telp', 'nik', 'alamat'])) {
-            $dataDiri = $request->validate([
-                'telp' => ['nullable', 'regex:/^[0-9]{9,15}$/'],
-                'nik' => ['nullable', 'digits:16'],
-                'alamat' => ['nullable', 'string', 'max:500'],
-            ]);
-
             $customer = Customer::firstOrCreate(
                 ['user_id' => $user->id],
                 ['nama' => $user->name, 'telp' => $dataDiri['telp'] ?? '']
             );
+            if ($nikTerkunci) {
+                unset($dataDiri['nik']);
+            }
             $customer->fill(array_filter($dataDiri, fn ($v) => $v !== null));
             $customer->nama = $user->name;
             $customer->save();
@@ -230,11 +290,22 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        $staf = $user->hasAnyRole(['sales', 'admin-cabang', 'service-advisor', 'mekanik', 'pimpinan', 'superadmin', 'owner']);
+
+        if (! $staf) {
+            $customerIds = Customer::where('user_id', $user->id)->pluck('id')->all();
+            $aktif = $this->hitungTransaksiAktif($customerIds);
+            if ($aktif['total'] > 0) {
+                throw ValidationException::withMessages([
+                    'password' => 'Akun tidak dapat dihapus karena masih ada transaksi aktif (SPK, booking servis, atau order sparepart). Selesaikan atau batalkan transaksi terlebih dahulu.',
+                ])->errorBag('userDeletion');
+            }
+        }
+
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
-
-        $user = $request->user();
 
         Auth::logout();
 
@@ -244,5 +315,40 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    private function cekNikTerkunci(array $customerIds, ?Customer $customer): bool
+    {
+        if (! $customer || blank($customer->nik) || empty($customerIds)) {
+            return false;
+        }
+
+        return Order::whereIn('customer_id', $customerIds)
+            ->whereNotIn('status', ['Batal', 'Expired'])
+            ->exists();
+    }
+
+    private function hitungTransaksiAktif(array $customerIds): array
+    {
+        if (empty($customerIds)) {
+            return ['spk' => 0, 'servis' => 0, 'sparepart' => 0, 'total' => 0];
+        }
+
+        $spk = Order::whereIn('customer_id', $customerIds)
+            ->whereIn('status', ['MenungguBayar', 'MenungguVerifikasi'])
+            ->count();
+        $servis = ServiceBooking::whereIn('customer_id', $customerIds)
+            ->whereIn('status', ['Menunggu', 'Dikonfirmasi', 'Dikerjakan'])
+            ->count();
+        $sparepart = SparepartOrder::whereIn('customer_id', $customerIds)
+            ->whereIn('status', ['MenungguBayar', 'MenungguVerifikasi'])
+            ->count();
+
+        return [
+            'spk' => $spk,
+            'servis' => $servis,
+            'sparepart' => $sparepart,
+            'total' => $spk + $servis + $sparepart,
+        ];
     }
 }

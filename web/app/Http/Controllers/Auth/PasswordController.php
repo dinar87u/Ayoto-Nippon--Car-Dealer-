@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
@@ -23,6 +24,15 @@ class PasswordController extends Controller
         $request->user()->update([
             'password' => Hash::make($validated['password']),
         ]);
+
+        // Keluarkan sesi login di perangkat lain setelah password diganti.
+        try {
+            Auth::logoutOtherDevices($validated['password']);
+        } catch (\Throwable $e) {
+            // Abaikan jika driver sesi tidak mendukung logoutOtherDevices.
+        }
+
+        $request->session()->regenerate();
 
         return back()->with('status', 'password-updated');
     }
