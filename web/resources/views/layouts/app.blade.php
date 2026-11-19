@@ -4,7 +4,14 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <script>document.documentElement.classList.add('js');</script>
+        <script>
+            document.documentElement.classList.add('js');
+            try {
+                if (window.matchMedia('(min-width: 1024px)').matches && localStorage.getItem('ayoto-sidebar-rail') === '1') {
+                    document.documentElement.classList.add('sidebar-rail-init');
+                }
+            } catch (e) {}
+        </script>
         @include('partials.theme-script')
 
         <title>{{ config('app.name', 'Laravel') }}</title>
@@ -20,7 +27,15 @@
     <body class="font-sans text-ink antialiased bg-surface-2/40 dark:bg-surface">
         <div class="min-h-screen lg:flex" x-data="{
             open: false,
+            ready: false,
             rail: (() => { try { return window.matchMedia('(min-width: 1024px)').matches && localStorage.getItem('ayoto-sidebar-rail') === '1'; } catch (e) { return false; } })(),
+            init() {
+                document.documentElement.classList.add('sidebar-ready');
+                requestAnimationFrame(() => {
+                    document.documentElement.classList.remove('sidebar-rail-init');
+                    requestAnimationFrame(() => { this.ready = true; });
+                });
+            },
             toggleSidebar() {
                 if (window.matchMedia('(min-width: 1024px)').matches) {
                     this.rail = !this.rail;

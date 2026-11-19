@@ -93,7 +93,16 @@ button:disabled { cursor: not-allowed; }
 .sidebar-track::-webkit-scrollbar-thumb { background: transparent; border-radius: 9999px; }
 .sidebar-track:hover::-webkit-scrollbar-thumb, .sidebar-track:focus-within::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); }
 .sidebar-track::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.4); }
-.sidebar-shell { height: 100dvh; }
+.sidebar-shell { height: 100dvh; width: 18rem; }
+@media (max-width: 1023px) {
+    html:not(.sidebar-ready) .sidebar-shell { transform: translateX(-100%); }
+}
+html.sidebar-rail-init .sidebar-shell { width: 5rem !important; transition: none !important; }
+html.sidebar-rail-init .sidebar-shell .sidebar-label { display: none !important; }
+html.sidebar-rail-init .sidebar-shell .sidebar-divider { display: block !important; }
+html.sidebar-rail-init .sidebar-shell .sidebar-link,
+html.sidebar-rail-init .sidebar-shell .sidebar-brand,
+html.sidebar-rail-init .sidebar-shell .sidebar-foot { justify-content: center; padding-left: 0; padding-right: 0; }
 
 /* Lenis smooth scroll & scroll-reveal gaya Boxcars/Framer (cubic-bezier(.22, .61, .36, 1)).
    Memakai properti individual translate & scale agar tidak bentrok dengan transform hover. */
