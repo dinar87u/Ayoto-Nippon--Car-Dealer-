@@ -1,7 +1,10 @@
 <x-app-layout>
     @php
-        $isSuper = Auth::user()->hasAnyRole(['superadmin', 'owner']);
+        $isOwner = Auth::user()->hasRole('owner');
+        $isSuperAdmin = Auth::user()->hasRole('superadmin');
+        $isSuper = $isOwner || $isSuperAdmin;
         $isManajemen = Auth::user()->hasAnyRole(['superadmin', 'owner', 'pimpinan']);
+        $judulDashboard = $isOwner ? 'Dashboard Owner' : ($isSuperAdmin ? 'Dashboard Super Admin' : 'Dashboard');
     @endphp
 
     <x-slot name="header">
@@ -11,7 +14,7 @@
                     {{ $isSuper ? 'Pusat Kendali Utama' : (Auth::user()->branch?->nama ?? 'Operasional Dealer') }}
                 </p>
                 <h2 class="mt-0.5 text-2xl font-extrabold text-ink tracking-tight">
-                    {{ $isSuper ? 'Dashboard Super Admin' : 'Dashboard' }}
+                    {{ $judulDashboard }}
                 </h2>
             </div>
 
